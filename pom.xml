@@ -87,7 +87,7 @@
                         <goals>
                             <goal>npm</goal>
                         </goals>
-                        <phase>post-clean</phase>
+                        <phase>clean</phase>
                     </execution>
 
                     <execution>
