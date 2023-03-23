@@ -1,0 +1,30 @@
+## HTTP test requests
+## Can be run with 'dot-http' (https://github.com/bayne/dot-http)
+## Or in any Jetbrains IntelliJ based IDE
+## Assumes running Conway.vdmsl, use http-client.env.json for vars
+
+### GET startup
+GET {{host}}/startup
+
+### POST exec: help
+POST {{host}}/exec
+
+help
+
+### POST exec: env
+POST {{host}}/exec
+
+env
+
+### POST exec: p tests()
+POST {{host}}/exec
+Content-Type: text/plain
+
+p tests()
+
+### POST exec: p GOSPER_GLIDER_GUN
+POST {{host}}/exec
+Content-Type: text/plain
+
+p GOSPER_GLIDER_GUN
+
