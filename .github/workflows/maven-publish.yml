@@ -45,7 +45,7 @@ jobs:
               }
             },
             {
-              "id": "github"
+              "id": "github",
               "url": "https://maven.pkg.github.com/nickbattle/*",
               "releases": {
                 "enabled": "true"
