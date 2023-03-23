@@ -1,0 +1,8 @@
+##########################################################################################
+# The annotation class mapping definition for the VDMJ Interpreter. See ClassMapper.
+##########################################################################################
+
+# annotations
+package  org.pointerless.vdmj.remote.annotations.tc to org.pointerless.vdmj.remote.annotations.in;
+
+map TCWebGUIAnnotation{name, args} to INWebGUIAnnotation(name, args);
