@@ -27,6 +27,51 @@ jobs:
         java-version: '11'
         distribution: 'temurin'
         cache: maven
+    - name: Generate settings.xml for Maven Builds
+      # You may pin to the exact commit or the version.
+      # uses: whelk-io/maven-settings-xml-action@7c60eb95b2d5ec18f2e0e29f34c9ed69475e7a96
+      uses: whelk-io/maven-settings-xml-action@v21
+      with:
+        servers: >
+          [
+            {
+              "id": "github",
+              "username": "${{github.actor}}",
+              "password": "${{github.token}}",
+              "configuration": {
+                "httpConfiguration": {
+                  "all": {
+                    "usePreemptive": "true"
+                  }
+                }
+              }
+            }
+          ]
+        # json array of repositories to add to settings.xml
+        repositories: >
+          [
+            {
+              "id": "central",
+              "name": "Maven Central",
+              "url": "https://repo1.maven.org/maven2",
+              "releases": {
+                "enabled": "true"
+              },
+              "snapshots": {
+                "enabled": "false"
+              }
+            },
+            {
+              "id": "github",
+              "url": "https://maven.pkg.github.com/nickbattle/*",
+              "releases": {
+                "enabled": "true"
+              },
+              "snapshots": {
+                "enabled": "true"
+              }
+            }
+          ]
     - name: Maven clean install
       run: mvn -B clean install --file pom.xml
     - name: Maven test
