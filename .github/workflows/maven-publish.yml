@@ -70,7 +70,7 @@ jobs:
               }
             }
           ]
-    - name: Build with Maven
+    - name: Maven clean install
       run: mvn clean install --file pom.xml
       env: 
         GITHUB_TOKEN: ${{github.token}}
