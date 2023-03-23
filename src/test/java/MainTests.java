@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class MainTests {
 
 	@Test
-	public void conway() throws IOException {
+	public void testConway() throws IOException {
 		URL conwayVDMSL = this.getClass().getClassLoader().getResource("Conway.vdmsl");
 
 		assertNotNull(conwayVDMSL);
