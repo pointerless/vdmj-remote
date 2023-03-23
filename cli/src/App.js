@@ -24,12 +24,13 @@ function unravelIntoSpans(text, keyStart, delim='\n'){
     );
 }
 
+
+const backendAPI = new BackendAPI();
+
 function App() {
     const [startupMessage, setStartupMessage] = useState(null);
     const [outputs, setOutputs] = useState(null);
     const [runningOutputs, setRunningOutputs] = useState(new Map());
-
-    const backendAPI = new BackendAPI();
 
     useEffect(() => {
         backendAPI.getOutputs()
