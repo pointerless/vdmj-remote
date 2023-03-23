@@ -137,7 +137,7 @@ public class ExtendedMain {
 		ipAddress("127.0.0.1");
 		port(serverPort);
 
-		externalStaticFileLocation("/home/harry/IdeaProjects/vdmj-rest-api/cli/build/");
+		staticFileLocation("cli/");
 
 		post("/exec", (request, response) -> {
 			response.type("application/json");

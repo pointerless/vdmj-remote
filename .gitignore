@@ -41,3 +41,4 @@ build/
 /.idea/httpRequests/
 /.idea/workspace.xml
 /dependency-reduced-pom.xml
+/src/main/resources/cli/
