@@ -34,8 +34,8 @@ jobs:
           [
             {
               "id": "github",
-              "username": "${secrets.USER_NAME}",
-              "password": "${secrets.ACCESS_TOKEN}",
+              "username": "${{secrets.USER_NAME}}",
+              "password": "${{secrets.ACCESS_TOKEN}}",
               "configuration": {
                 "httpConfiguration": {
                   "all": {
