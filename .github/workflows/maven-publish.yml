@@ -30,8 +30,23 @@ jobs:
       # uses: whelk-io/maven-settings-xml-action@7c60eb95b2d5ec18f2e0e29f34c9ed69475e7a96
       uses: whelk-io/maven-settings-xml-action@v21
       with:
+        servers: >
+          [
+            {
+              "id": "github",
+              "username": "${env.GITHUB_ACTOR}",
+              "password": "${env.GITHUB_TOKEN}",
+              "configuration": {
+                "httpConfiguration": {
+                  "all": {
+                    "usePreemptive": "true"
+                  }
+                }
+              }
+            }
+          ]
         # json array of repositories to add to settings.xml
-        repositories: |
+        repositories: >
           [
             {
               "id": "central",
