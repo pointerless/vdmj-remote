@@ -137,7 +137,7 @@ public class ExtendedMain {
 		ipAddress("127.0.0.1");
 		port(serverPort);
 
-		staticFileLocation("cli/");
+		staticFileLocation("cli");
 
 		post("/exec", (request, response) -> {
 			response.type("application/json");
