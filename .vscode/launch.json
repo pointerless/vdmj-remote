@@ -1,0 +1,17 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "ExtendedMain",
+            "request": "launch",
+            "mainClass": "org.pointerless.vdmj.remote.ExtendedMain",
+            "projectName": "vdmj-remote",
+            //"cwd": "${workspaceFolder}${pathSeparator}src${pathSeparator}main${pathSeparator}resources",
+            "args": "-p 8080 -t vdmsl --sourcePath ${workspaceFolder}${pathSeparator}src${pathSeparator}test${pathSeparator}resources/Conway.vdmsl"
+        }
+    ]
+}
