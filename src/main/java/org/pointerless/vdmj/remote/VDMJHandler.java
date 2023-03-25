@@ -1,5 +1,8 @@
 package org.pointerless.vdmj.remote;
 
+import com.fujitsu.vdmj.messages.Console;
+import com.fujitsu.vdmj.messages.ConsolePrintWriter;
+import com.fujitsu.vdmj.messages.ConsoleWriter;
 import com.fujitsu.vdmj.plugins.VDMJ;
 
 import java.io.*;
@@ -12,11 +15,13 @@ public class VDMJHandler implements Runnable {
 	public static final PrintStream consoleOut = System.out;
 	public static final InputStream consoleIn = System.in;
 
-	private final InputStream vdmjOut;
 	private final OutputStream vdmjIn;
+	private final InputStream vdmjOut;
+	private final InputStream vdmjErr;
 
 	private final InputStream vdmjInternalInput;
 	private final OutputStream vdmjInternalOutput;
+	private final OutputStream vdmjInternalError;
 
 	private String startupString;
 
@@ -24,6 +29,7 @@ public class VDMJHandler implements Runnable {
 	private final CommandQueue outputQueue = new CommandQueue();
 
 	Reader receive;
+	Reader error;
 	Writer send;
 
 	String[] args;
@@ -31,21 +37,26 @@ public class VDMJHandler implements Runnable {
 	Thread commandRunner;
 
 	public VDMJHandler(String[] args) {
+		Console.charset = StandardCharsets.UTF_8;
 		vdmjOut = new PipedInputStream(pipeSize);
+		vdmjErr = new PipedInputStream(pipeSize);
 		vdmjInternalInput = new PipedInputStream(pipeSize);
 
 		try {
 			vdmjIn = new PipedOutputStream((PipedInputStream) vdmjInternalInput);
 			vdmjInternalOutput = new PipedOutputStream((PipedInputStream) vdmjOut);
+			vdmjInternalError = new PipedOutputStream((PipedInputStream) vdmjErr);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 
-		System.setOut(new PrintStream(vdmjInternalOutput));
-		System.setIn(vdmjInternalInput);
+		Console.out = new ConsolePrintWriter(new PrintStream(vdmjInternalOutput));
+		Console.in = new BufferedReader(new InputStreamReader(vdmjInternalInput));
+		Console.err = new ConsolePrintWriter(new PrintStream(vdmjInternalError));
 
 		this.args = args;
 		this.receive = new InputStreamReader(vdmjOut, StandardCharsets.UTF_8);
+		this.error = new InputStreamReader(vdmjErr, StandardCharsets.UTF_8);
 		this.send = new OutputStreamWriter(vdmjIn, StandardCharsets.UTF_8);
 
 		this.commandRunner = new Thread(this::commandHandler);
@@ -88,6 +99,11 @@ public class VDMJHandler implements Runnable {
 			}
 		} while (this.outputQueue.peek() == null || this.outputQueue.peek().getId() != command.getId());
 		return this.outputQueue.take();
+	}
+
+	private String pickupError() throws IOException {
+		//TODO
+		return "";
 	}
 
 	private String readReceive() throws IOException {
