@@ -16,6 +16,11 @@ import java.util.*;
 
 import static spark.Spark.*;
 
+
+/**
+ * An Extended Version of the VDMJ Main process to allow RPC
+ * interactions
+ */
 public class ExtendedMain {
 	private static final Logger logger = LoggerFactory.getLogger(ExtendedMain.class);
 	private final ObjectMapper objectMapper;
@@ -115,7 +120,7 @@ public class ExtendedMain {
 		}
 
 		String[] vdmjArgs = {
-			"-i", "-annotations", "-"+args.sourceType, pathToSource
+				"-i", "-annotations", /*"-exceptions", ??*/ "-"+args.sourceType, pathToSource
 		};
 
 		VDMJHandler handler = new VDMJHandler(vdmjArgs);

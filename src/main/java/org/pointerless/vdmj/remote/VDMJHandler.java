@@ -2,26 +2,19 @@ package org.pointerless.vdmj.remote;
 
 import com.fujitsu.vdmj.messages.Console;
 import com.fujitsu.vdmj.messages.ConsolePrintWriter;
-import com.fujitsu.vdmj.messages.ConsoleWriter;
 import com.fujitsu.vdmj.plugins.VDMJ;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Handles VDMJ IO in a thread-safe manner.
+ */
 public class VDMJHandler implements Runnable {
 
-	private static final int pipeSize = 2 << 15;
-
-	public static final PrintStream consoleOut = System.out;
-	public static final InputStream consoleIn = System.in;
-
-	private final OutputStream vdmjIn;
-	private final InputStream vdmjOut;
-	private final InputStream vdmjErr;
-
-	private final InputStream vdmjInternalInput;
-	private final OutputStream vdmjInternalOutput;
-	private final OutputStream vdmjInternalError;
+	private final PairedPipedIOStream in;
+	private final PairedPipedIOStream out;
+	private final PairedPipedIOStream err;
 
 	private String startupString;
 
@@ -36,28 +29,21 @@ public class VDMJHandler implements Runnable {
 
 	Thread commandRunner;
 
-	public VDMJHandler(String[] args) {
+	public VDMJHandler(String[] args) throws IOException {
 		Console.charset = StandardCharsets.UTF_8;
-		vdmjOut = new PipedInputStream(pipeSize);
-		vdmjErr = new PipedInputStream(pipeSize);
-		vdmjInternalInput = new PipedInputStream(pipeSize);
 
-		try {
-			vdmjIn = new PipedOutputStream((PipedInputStream) vdmjInternalInput);
-			vdmjInternalOutput = new PipedOutputStream((PipedInputStream) vdmjOut);
-			vdmjInternalError = new PipedOutputStream((PipedInputStream) vdmjErr);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+		in = new PairedPipedIOStream();
+		out = new PairedPipedIOStream();
+		err = new PairedPipedIOStream();
 
-		Console.out = new ConsolePrintWriter(new PrintStream(vdmjInternalOutput));
-		Console.in = new BufferedReader(new InputStreamReader(vdmjInternalInput));
-		Console.err = new ConsolePrintWriter(new PrintStream(vdmjInternalError));
+		Console.out = new ConsolePrintWriter(new PrintStream(out.getOutputStream()));
+		Console.in = new BufferedReader(new InputStreamReader(in.getInputStream()));
+		Console.err = new ConsolePrintWriter(new PrintStream(err.getOutputStream()));
 
 		this.args = args;
-		this.receive = new InputStreamReader(vdmjOut, StandardCharsets.UTF_8);
-		this.error = new InputStreamReader(vdmjErr, StandardCharsets.UTF_8);
-		this.send = new OutputStreamWriter(vdmjIn, StandardCharsets.UTF_8);
+		this.receive = new InputStreamReader(out.getInputStream(), StandardCharsets.UTF_8);
+		this.error = new InputStreamReader(err.getInputStream(), StandardCharsets.UTF_8);
+		this.send = new OutputStreamWriter(in.getOutputStream(), StandardCharsets.UTF_8);
 
 		this.commandRunner = new Thread(this::commandHandler);
 		this.commandRunner.start();
@@ -107,7 +93,7 @@ public class VDMJHandler implements Runnable {
 	}
 
 	private String readReceive() throws IOException {
-		StringBuilder out = new StringBuilder();
+		StringBuilder strOut = new StringBuilder();
 		try{
 			int i;
 			boolean newLined = false;
@@ -120,13 +106,13 @@ public class VDMJHandler implements Runnable {
 				}else if(newLined){
 					newLined = false;
 				}
-				out.append(c);
+				strOut.append(c);
 			}
 		}catch(Exception e){
 			throw new RuntimeException(e);
 		}
-		vdmjInternalOutput.flush();
-		return out.toString();
+		out.getOutputStream().flush();
+		return strOut.toString();
 	}
 
 	private void writeSend(String toWrite){
@@ -149,6 +135,11 @@ public class VDMJHandler implements Runnable {
 
 	@Override
 	public void run() {
-		VDMJ.main(args);
+		try {
+			VDMJ.main(args);
+		}catch (Exception e){
+			System.exit(-1);
+		}
 	}
+
 }
