@@ -1,4 +1,4 @@
-package org.pointerless.vdmj.remote;
+package org.pointerless.vdmj.remote.engine;
 
 import com.fujitsu.vdmj.messages.Console;
 import com.fujitsu.vdmj.messages.ConsolePrintWriter;

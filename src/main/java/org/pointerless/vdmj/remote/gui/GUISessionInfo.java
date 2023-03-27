@@ -1,4 +1,4 @@
-package org.pointerless.vdmj.remote;
+package org.pointerless.vdmj.remote.gui;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;

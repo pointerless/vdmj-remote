@@ -1,4 +1,4 @@
-package org.pointerless.vdmj.remote;
+package org.pointerless.vdmj.remote.engine;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;

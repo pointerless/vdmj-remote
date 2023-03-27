@@ -1,4 +1,4 @@
-package org.pointerless.vdmj.remote;
+package org.pointerless.vdmj.remote.engine;
 
 import java.util.concurrent.LinkedBlockingQueue;
 

@@ -1,4 +1,4 @@
-package org.pointerless.vdmj.remote;
+package org.pointerless.vdmj.remote.gui;
 
 import lombok.Data;
 import org.pointerless.vdmj.remote.annotations.tc.TCWebGUIAnnotation;

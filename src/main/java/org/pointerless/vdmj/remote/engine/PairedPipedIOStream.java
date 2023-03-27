@@ -1,7 +1,10 @@
-package org.pointerless.vdmj.remote;
+package org.pointerless.vdmj.remote.engine;
 
 import java.io.*;
 
+/**
+ * Represents a pair of connected streams, holding them together
+ */
 public class PairedPipedIOStream{
 
 	private static final class Input extends PipedInputStream {

@@ -1,10 +1,11 @@
-package org.pointerless.vdmj.remote;
+package org.pointerless.vdmj.remote.gui;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import org.pointerless.vdmj.remote.engine.Command;
+import org.pointerless.vdmj.remote.engine.VDMJHandler;
 import spark.Service;
 
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -14,11 +15,11 @@ public class GUIOutputSession{
 	private final GUISessionInfo info;
 	private final VDMJHandler vdmjHandler;
 
+	private Service http;
+
 	public GUIOutputSession(GUISessionInfo info, VDMJHandler handler){
 		this.info = info;
 		this.vdmjHandler = handler;
-
-
 
 		this.objectMapper = new ObjectMapper();
 		SimpleModule module = new SimpleModule();
@@ -26,8 +27,12 @@ public class GUIOutputSession{
 		this.objectMapper.registerModule(module);
 	}
 
+	public GUISessionInfo getInfo(){
+		return this.info;
+	}
+
 	public void run() {
-		Service http = Service.ignite();
+		http = Service.ignite();
 
 		http.ipAddress("127.0.0.1");
 		http.port(info.getPort());
@@ -44,5 +49,14 @@ public class GUIOutputSession{
 			return objectMapper.writeValueAsString(out);
 		});
 
+		http.exception(InterruptedException.class, (e, request, response) -> {
+			response.body(e.getMessage());
+			response.status(400);
+		});
+
+	}
+
+	public void stop() {
+		http.stop();
 	}
 }

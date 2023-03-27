@@ -1,7 +1,7 @@
 import org.junit.jupiter.api.Test;
 import org.pointerless.vdmj.remote.ExtendedMain;
 import org.pointerless.vdmj.remote.SessionException;
-import org.pointerless.vdmj.remote.VDMJHandler;
+import org.pointerless.vdmj.remote.engine.VDMJHandler;
 
 import java.io.IOException;
 import java.net.URL;
