@@ -24,8 +24,8 @@ public class PairedPipedIOStream{
 
 	public static int pipeSize = 2 << 15;
 
-	private Input input;
-	private Output output;
+	private final Input input;
+	private final Output output;
 
 	public PairedPipedIOStream() throws IOException {
 		this.input = new Input(pipeSize);

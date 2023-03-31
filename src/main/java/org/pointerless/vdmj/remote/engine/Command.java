@@ -28,7 +28,7 @@ public class Command {
 			jsonGenerator.writeStartObject();
 			jsonGenerator.writeStringField("id", command.id.toString());
 			jsonGenerator.writeStringField("command", command.command);
-			jsonGenerator.writeStringField("response", command.response);
+			jsonGenerator.writeStringField("response", command.response.getMessage());
 			jsonGenerator.writeStringField("requested", command.requested.toString());
 			jsonGenerator.writeStringField("queued", command.queued.toString());
 			jsonGenerator.writeStringField("executionStart", command.executionStart.toString());
@@ -42,7 +42,9 @@ public class Command {
 
 	private final String command;
 
-	private String response;
+	private CommandResponse response;
+
+	private boolean error = false;
 
 	private Instant requested;
 

@@ -1,44 +1,26 @@
 package org.pointerless.vdmj.remote;
 
 import com.beust.jcommander.*;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import lombok.Data;
-import org.pointerless.vdmj.remote.annotations.tc.TCWebGUIAnnotation;
-import org.pointerless.vdmj.remote.engine.Command;
+import lombok.extern.slf4j.Slf4j;
 import org.pointerless.vdmj.remote.engine.VDMJHandler;
-import org.pointerless.vdmj.remote.gui.GUIOutputSession;
-import org.pointerless.vdmj.remote.gui.GUISessionInfo;
-import org.pointerless.vdmj.remote.gui.Output;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.pointerless.vdmj.remote.gui.MainOutputSession;
 
 import java.io.*;
-import java.net.ServerSocket;
 import java.nio.file.Files;
 import java.util.*;
-
-import static spark.Spark.*;
-
 
 /**
  * An Extended Version of the VDMJ Main process to allow RPC
  * interactions
  */
+@Slf4j
 public class ExtendedMain {
-	private static final Logger logger = LoggerFactory.getLogger(ExtendedMain.class);
-	private final ObjectMapper objectMapper;
-
 	private final VDMJHandler handler;
 
 	private final Thread handlerThread;
 
-	private final Map<Output, GUIOutputSession> outputSessionMap = new HashMap<>();
-
-	private final Set<Output> outputs = new HashSet<>();
-
-	private final int serverPort;
+	private final MainOutputSession mainOutputSession;
 
 	@Data
 	public static class Args {
@@ -61,18 +43,14 @@ public class ExtendedMain {
 	}
 
 	public ExtendedMain(VDMJHandler handler, int serverPort) throws IOException {
-		this.serverPort = serverPort;
 		this.handler = handler;
 		handlerThread = new Thread(handler);
 		handlerThread.start();
 		handler.pickupStartupString();
 
-		TCWebGUIAnnotation.moduleMap.forEach((module, annotations) ->
-				annotations.forEach(annotation -> outputs.add(Output.gui(module, annotation))));
-		this.objectMapper = new ObjectMapper();
-		SimpleModule module = new SimpleModule();
-		module.addSerializer(Command.class, new Command.CommandSerializer());
-		this.objectMapper.registerModule(module);
+		mainOutputSession = MainOutputSession.mainOutputSession(handler, serverPort);
+
+		mainOutputSession.startSession();
 	}
 
 	public static void main(String[] argv) throws IOException {
@@ -130,95 +108,11 @@ public class ExtendedMain {
 
 		VDMJHandler handler = new VDMJHandler(vdmjArgs);
 
-		ExtendedMain extendedMain = new ExtendedMain(handler, args.serverPort);
-		extendedMain.run();
-
-	}
-
-	/**
-	 * Gets a random port not currently occupied on the system
-	 *
-	 * @return A port number that can be hosted on
-	 * @throws SessionException No ports available
-	 */
-	public static Integer getRandomPort() throws SessionException {
-		try (ServerSocket socket = new ServerSocket(0)) {
-			return socket.getLocalPort();
-		}catch (IOException e){
-			throw new SessionException("Could not find port to bind on: "+e.getMessage());
+		if(args.serverPort == 0){
+			args.serverPort = MainOutputSession.getRandomPort();
 		}
-	}
 
-	/**
-	 * Starts web server as configured
-	 */
-	private void run(){
-		// Bind to only local requests on specified port
-		ipAddress("127.0.0.1");
-		port(serverPort);
-
-		// Host CLI web interface
-		staticFileLocation("cli");
-
-		// Execute a statement
-		post("/exec", (request, response) -> {
-			response.type("application/json");
-			Command out = this.handler.runCommand(request.body());
-			return objectMapper.writeValueAsString(out);
-		});
-
-		// Lists the Outputs available
-		get("/outputs", (request, response) -> {
-			response.type("application/json");
-			return objectMapper.writeValueAsString(outputs);
-		});
-
-		// Starts an Output passed as request body
-		post("/startOutput", (request, response) -> {
-			try{
-				Output output = objectMapper.readValue(request.body(), Output.class);
-				if(!outputs.contains(output)){
-					throw new SessionException("Could not find output: "+objectMapper.writeValueAsString(output));
-				}else if(outputSessionMap.containsKey(output)){
-					return objectMapper.writeValueAsString(outputSessionMap.get(output).getInfo());
-				}
-				response.type("application/json");
-				GUISessionInfo info = new GUISessionInfo(output.getId(), getRandomPort(),
-						output.getProperties().get("location"),
-						output.getModule()+": "+output.getProperties().get("nickname"));
-				GUIOutputSession outputSession = new GUIOutputSession(info, handler);
-				outputSessionMap.put(output, outputSession);
-				outputSession.run();
-				return objectMapper.writeValueAsString(info);
-			}catch(JsonProcessingException jsonProcessingException){
-				throw new SessionException("Could not process output JSON: "+jsonProcessingException.getMessage());
-			}
-		});
-
-		// Stops an Output passed as request body
-		post("/stopOutput", (request, response) -> {
-			try{
-				Output output = objectMapper.readValue(request.body(), Output.class);
-				if(!outputs.contains(output)){
-					throw new SessionException("Could not find output: "+objectMapper.writeValueAsString(output));
-				}else if(outputSessionMap.containsKey(output)){
-					outputSessionMap.get(output).stop();
-				}
-				return true;
-			}catch(JsonProcessingException jsonProcessingException){
-				throw new SessionException("Could not process output JSON: "+jsonProcessingException.getMessage());
-			}
-		});
-
-		// Get the string printed by VDMJ on startup
-		get("/startup", (request, response) -> this.handler.getStartupString());
-
-		// Handle custom exception, crash on others
-		exception(SessionException.class, (e, request, response) -> {
-			response.body(e.getMessage());
-			response.status(400);
-		});
-
+		ExtendedMain main = new ExtendedMain(handler, args.serverPort);
 	}
 
 }

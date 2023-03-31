@@ -3,6 +3,6 @@
 ##########################################################################################
 
 # annotations
-package  org.pointerless.vdmj.remote.annotations.tc to org.pointerless.vdmj.remote.annotations.in;
+package  org.pointerless.vdmj.remote.engine.annotations.tc to org.pointerless.vdmj.remote.engine.annotations.in;
 
 map TCWebGUIAnnotation{name, args} to INWebGUIAnnotation(name, args);

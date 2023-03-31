@@ -58,7 +58,7 @@ public class VDMJHandler implements Runnable {
 					command = this.inputQueue.take();
 				}
 				this.writeSend(command.getCommand());
-				command.setResponse(this.readReceive());
+				command.setResponse(CommandResponse.success(this.readReceive()));
 				synchronized (this.outputQueue){
 					this.outputQueue.put(command);
 					this.outputQueue.notifyAll();
@@ -83,6 +83,10 @@ public class VDMJHandler implements Runnable {
 			synchronized (this.outputQueue){
 				this.outputQueue.wait(10);
 			}
+			if(!this.commandRunner.isAlive()){
+				command.setError(true);
+				command.setResponse(CommandResponse.error("VDMJ Stopped running", 400));
+			}
 		} while (this.outputQueue.peek() == null || this.outputQueue.peek().getId() != command.getId());
 		return this.outputQueue.take();
 	}
@@ -101,6 +105,7 @@ public class VDMJHandler implements Runnable {
 				char c = (char)i;
 				if(c == '\n') newLined = true;
 				else if(newLined && c == '>'){
+					//noinspection ResultOfMethodCallIgnored
 					receive.read();
 					break;
 				}else if(newLined){

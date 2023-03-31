@@ -116,7 +116,7 @@ function App() {
                             if (runningOutputs.has(output.id)) {
                                 container.push(
                                     <Tab eventKey={output.id}
-                                         title={output.properties.displayName}>
+                                         title={output.displayName}>
                                         <iframe id={output.id} title={output.id}
                                                 src={runningOutputs.get(output.id).accessURL}
                                                 style={{
@@ -134,7 +134,7 @@ function App() {
                                     iframe.src += '';
                                 }, 100);
                                 window.addEventListener("message", (e) => {
-                                    var thisFrame = document.getElementById(output.id);
+                                    let thisFrame = document.getElementById(output.id);
                                     if (thisFrame === null) {
                                         console.log(`NULLED: ${output.id}`);
                                     } else if (thisFrame.contentWindow === e.source) {
@@ -145,7 +145,7 @@ function App() {
                             } else {
                                 container.push(
                                     <Tab eventKey={output.id}
-                                         title={output.properties.displayName}>
+                                         title={output.displayName}>
                                         <CircleLoader></CircleLoader>
                                     </Tab>
                                 )

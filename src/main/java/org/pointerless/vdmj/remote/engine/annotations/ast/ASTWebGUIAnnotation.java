@@ -1,4 +1,4 @@
-package org.pointerless.vdmj.remote.annotations.ast;
+package org.pointerless.vdmj.remote.engine.annotations.ast;
 
 import com.fujitsu.vdmj.ast.annotations.ASTAnnotation;
 import com.fujitsu.vdmj.ast.lex.LexIdentifierToken;

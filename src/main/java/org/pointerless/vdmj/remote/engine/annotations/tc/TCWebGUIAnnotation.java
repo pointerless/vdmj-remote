@@ -1,4 +1,4 @@
-package org.pointerless.vdmj.remote.annotations.tc;
+package org.pointerless.vdmj.remote.engine.annotations.tc;
 
 import com.fujitsu.vdmj.tc.annotations.TCAnnotation;
 import com.fujitsu.vdmj.tc.definitions.TCClassDefinition;
@@ -10,20 +10,18 @@ import com.fujitsu.vdmj.tc.modules.TCModule;
 import com.fujitsu.vdmj.tc.statements.TCStatement;
 import com.fujitsu.vdmj.typechecker.Environment;
 import com.fujitsu.vdmj.typechecker.NameScope;
+import org.pointerless.vdmj.remote.engine.annotations.RemoteOutputRegistry;
+import org.pointerless.vdmj.remote.engine.annotations.VDMJRemoteOutputAnnotation;
+import org.pointerless.vdmj.remote.gui.Output;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-public class TCWebGUIAnnotation extends TCAnnotation {
+public class TCWebGUIAnnotation extends TCAnnotation implements VDMJRemoteOutputAnnotation {
 	private static final Logger logger = LoggerFactory.getLogger(TCWebGUIAnnotation.class);
 
-	public final static Map<String, List<TCWebGUIAnnotation>> moduleMap = new HashMap<>();
 	private String staticWebLocation;
 	private String nickname;
+	private String moduleName;
 
 	private static String usage(){
 		return "\n--@WebGUI(<nickname>, <static web location> \nmodule <module name>" ;
@@ -52,9 +50,8 @@ public class TCWebGUIAnnotation extends TCAnnotation {
 		if(this.args.isEmpty()){
 			name.report(6009, "@WebGUI requires at least two arguments: "+usage());
 		}else {
-			List<TCWebGUIAnnotation> current = moduleMap.getOrDefault(module.name.getName(), new ArrayList<>());
-			current.add(this);
-			moduleMap.put(module.name.getName(), current);
+			this.moduleName = module.name.getName();
+			RemoteOutputRegistry.register(this);
 		}
 	}
 
@@ -76,6 +73,16 @@ public class TCWebGUIAnnotation extends TCAnnotation {
 	@Override
 	public void tcBefore(TCStatement stmt, Environment env, NameScope scope) {
 		name.report(6009, "@WebGUI is only applicable to modules: "+usage());
+	}
+
+	@Override
+	public Output convertToOutput() {
+		Output output = new Output();
+		output.setModule(moduleName);
+		output.setType("GUI");
+		output.setLocation(staticWebLocation);
+		output.setDisplayName(moduleName+": "+nickname);
+		return output;
 	}
 
 }

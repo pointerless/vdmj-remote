@@ -1,4 +1,4 @@
-package org.pointerless.vdmj.remote.annotations.in;
+package org.pointerless.vdmj.remote.engine.annotations.in;
 
 import com.fujitsu.vdmj.in.annotations.INAnnotation;
 import com.fujitsu.vdmj.in.expressions.INExpressionList;

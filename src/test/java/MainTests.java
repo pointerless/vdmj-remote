@@ -1,7 +1,11 @@
+import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.pointerless.vdmj.remote.ExtendedMain;
-import org.pointerless.vdmj.remote.SessionException;
+import org.pointerless.vdmj.remote.engine.Command;
 import org.pointerless.vdmj.remote.engine.VDMJHandler;
+import org.pointerless.vdmj.remote.gui.MainOutputSession;
 
 import java.io.IOException;
 import java.net.URL;
@@ -9,10 +13,15 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Slf4j
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class MainTests {
 
-	@Test
-	public void testConway() throws IOException {
+	private VDMJHandler handler;
+	private ExtendedMain extendedMain;
+
+	@BeforeAll()
+	public void setup() throws IOException{
 		URL conwayVDMSL = this.getClass().getClassLoader().getResource("Conway.vdmsl");
 
 		assertNotNull(conwayVDMSL);
@@ -21,18 +30,13 @@ public class MainTests {
 				"-i", "-annotations", "-vdmsl", conwayVDMSL.toString()
 		};
 
-		VDMJHandler handler = new VDMJHandler(vdmjArgs);
+		handler = new VDMJHandler(vdmjArgs);
 
-		int port = -1;
-		try {
-			port = ExtendedMain.getRandomPort();
-		}catch (SessionException e){
-			fail(e);
-		}
+		int port = MainOutputSession.getRandomPort();
 
 		assertNotEquals(-1, port);
 
-		ExtendedMain extendedMain = new ExtendedMain(handler, port);
+		extendedMain = new ExtendedMain(handler, port);
 
 		List<String> expectedStartup = List.of(
 				"Parsed 1 module in .* secs. No syntax errors",
@@ -45,6 +49,17 @@ public class MainTests {
 
 		assertLinesMatch(expectedStartup, actualStartup);
 
+		//extendedMain.run();
+
+		log.info("Finished starting server, continuing with tests");
+
+	}
+
+	@Test()
+	public void testConway() throws InterruptedException {
+		Command result = handler.runCommand("env");
+
+		log.info(result.toString());
 	}
 
 }

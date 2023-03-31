@@ -3,6 +3,6 @@
 ##########################################################################################
 
 # annotations
-package org.pointerless.vdmj.remote.annotations.ast to org.pointerless.vdmj.remote.annotations.tc;
+package org.pointerless.vdmj.remote.engine.annotations.ast to org.pointerless.vdmj.remote.engine.annotations.tc;
 
 map ASTWebGUIAnnotation{name, args} to TCWebGUIAnnotation(name, args);
