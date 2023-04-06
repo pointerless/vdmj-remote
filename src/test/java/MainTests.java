@@ -1,4 +1,5 @@
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -18,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class MainTests {
 
 	private VDMJHandler handler;
-	private ExtendedMain extendedMain;
+	private Thread handlerThread;
 
 	@BeforeAll()
 	public void setup() throws IOException{
@@ -31,12 +32,10 @@ public class MainTests {
 		};
 
 		handler = new VDMJHandler(vdmjArgs);
+		handlerThread = new Thread(handler);
+		handlerThread.start();
 
-		int port = MainOutputSession.getRandomPort();
-
-		assertNotEquals(-1, port);
-
-		extendedMain = new ExtendedMain(handler, port);
+		handler.pickupStartupString();
 
 		List<String> expectedStartup = List.of(
 				"Parsed 1 module in .* secs. No syntax errors",
@@ -48,8 +47,6 @@ public class MainTests {
 		List<String> actualStartup = List.of(handler.getStartupString().split("\n"));
 
 		assertLinesMatch(expectedStartup, actualStartup);
-
-		//extendedMain.run();
 
 		log.info("Finished starting server, continuing with tests");
 

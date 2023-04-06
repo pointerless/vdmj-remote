@@ -21,6 +21,8 @@ public final class GlobalProperties {
 
 	public static String mainHostResourceFolder = "cli";
 
+	public static String hostErrorResourceFolder = "no-folder-html";
+
 	public static void loadPropertiesFromFile(String filename){
 		Properties defaultProps = new Properties();
 		URL propFileURL = GlobalProperties.class.getResource(filename);
@@ -32,6 +34,7 @@ public final class GlobalProperties {
 				log.info("Loaded properties '"+propFileURL.getFile()+"'");
 				hostname = defaultProps.getProperty("hostname", hostname);
 				mainHostResourceFolder = defaultProps.getProperty("mainHostResourceFolder", mainHostResourceFolder);
+				hostErrorResourceFolder = defaultProps.getProperty("hostErrorResourceFolder", hostErrorResourceFolder);
 			} catch (IOException e) {
 				log.info("Couldn't load '" + propFileURL.getFile() + "', leaving default properties");
 			}

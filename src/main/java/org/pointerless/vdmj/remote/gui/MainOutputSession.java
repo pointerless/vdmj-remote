@@ -10,9 +10,7 @@ import spark.Service;
 
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -21,7 +19,7 @@ import java.util.stream.Collectors;
  */
 public class MainOutputSession extends VDMJOutputSession {
 
-	private final Set<Output> outputs;
+	private final Map<UUID, Output> outputs = new HashMap<>();
 	private final Map<Output, OutputSession> outputSessionMap = new HashMap<>();
 
 	/**
@@ -31,8 +29,10 @@ public class MainOutputSession extends VDMJOutputSession {
 	 */
 	private MainOutputSession(OutputSessionInfo info, VDMJHandler handler){
 		super(info, handler);
-		outputs = RemoteOutputRegistry.getOutputSet().stream().map(VDMJRemoteOutputAnnotation::convertToOutput)
-				.collect(Collectors.toSet());
+		RemoteOutputRegistry.getOutputSet().stream().map(VDMJRemoteOutputAnnotation::convertToOutput)
+				.forEach(output -> {
+					outputs.put(output.getId(), output);
+				});
 	}
 
 	/**
@@ -74,7 +74,7 @@ public class MainOutputSession extends VDMJOutputSession {
 		// Lists the Outputs available
 		http.get("/outputs", (request, response) -> {
 			response.type("application/json");
-			return objectMapper.writeValueAsString(outputs);
+			return objectMapper.writeValueAsString(outputs.values());
 		});
 
 		// Starts an Output passed as request body
@@ -82,15 +82,16 @@ public class MainOutputSession extends VDMJOutputSession {
 			try{
 				response.type("application/json");
 				Output output = objectMapper.readValue(request.body(), Output.class);
-				if(!outputs.contains(output)){
+				if(!outputs.containsKey(output.getId())){
 					throw new SessionException("Could not find output: "+objectMapper.writeValueAsString(output));
 				}else if(outputSessionMap.containsKey(output)){
 					return objectMapper.writeValueAsString(outputSessionMap.get(output).getInfo());
 				}
+				output = outputs.get(output.getId());
 				OutputSession outputSession = output.toSession(handler, getRandomPort());
 				outputSessionMap.put(output, outputSession);
 				outputSession.startSession();
-				return objectMapper.writeValueAsString(info);
+				return objectMapper.writeValueAsString(outputSession.getInfo());
 			}catch(JsonProcessingException jsonProcessingException){
 				throw new SessionException("Could not process output JSON: "+jsonProcessingException.getMessage());
 			}
@@ -100,9 +101,10 @@ public class MainOutputSession extends VDMJOutputSession {
 		http.post("/stopOutput", (request, response) -> {
 			try{
 				Output output = objectMapper.readValue(request.body(), Output.class);
-				if(!outputs.contains(output)){
+				if(!outputs.containsKey(output.getId())){
 					throw new SessionException("Could not find output: "+objectMapper.writeValueAsString(output));
 				}else if(outputSessionMap.containsKey(output)){
+					output = outputs.get(output.getId());
 					outputSessionMap.get(output).stopSession();
 				}
 				return true;

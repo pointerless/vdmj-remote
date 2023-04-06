@@ -1,73 +1,17 @@
 package org.pointerless.vdmj.remote.gui;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.pointerless.vdmj.remote.GlobalProperties;
 import org.pointerless.vdmj.remote.SessionException;
 import spark.Service;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Optional;
 
+@Slf4j
 public abstract class OutputSession {
-	@Data
-	public static final class OutputSessionInfo{
-
-		@Slf4j
-		public static final class OutputSessionInfoSerializer extends StdSerializer<OutputSessionInfo> {
-
-			public OutputSessionInfoSerializer(){ this(null); }
-
-			public OutputSessionInfoSerializer(Class<OutputSessionInfo> s) {
-				super(s);
-			}
-
-			@Override
-			public void serialize(OutputSessionInfo info, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
-				jsonGenerator.writeStartObject();
-				jsonGenerator.writeStringField("accessURL", "http://" + GlobalProperties.hostname +
-						":" + info.port);
-				info.properties.forEach((k, v) -> {
-					try {
-						jsonGenerator.writeStringField(k, v);
-					} catch (IOException e) {
-						log.error("Could not write info property: " + e);
-					}
-				});
-				jsonGenerator.writeEndObject();
-			}
-
-		}
-
-		public enum StaticHostType{
-			NOHOST,
-			INTERNAL,
-			EXTERNAL
-		}
-
-		private int port;
-		private String staticHostPath;
-		private StaticHostType staticHostType;
-
-		private Map<String, String> properties = new HashMap<>();
-
-		public void setProperty(String key, String value){
-			this.properties.put(key, value);
-		}
-
-		public String getProperty(String key){
-			return this.properties.get(key);
-		}
-
-		public String removePropertyIfExists(String key){
-			return this.properties.remove(key);
-		}
-
-	}
 
 	protected OutputSessionInfo info;
 
@@ -77,16 +21,33 @@ public abstract class OutputSession {
 		this.info = info;
 	}
 
+	private void hostNoFolder(String reason){
+		http.staticFiles.location(GlobalProperties.hostErrorResourceFolder);
+		http.get("reason", (request, response) -> reason);
+	}
+
+	private void staticSetup(){
+		if(this.info.getStaticHostType() == OutputSessionInfo.StaticHostType.INTERNAL){
+			if(this.getClass().getClassLoader().getResource(this.info.getStaticHostPath()) == null){
+				hostNoFolder("No such host-able resource: "+this.info.getStaticHostPath());
+			}else {
+				http.staticFiles.location(this.info.getStaticHostPath());
+			}
+		}else if(this.info.getStaticHostType() == OutputSessionInfo.StaticHostType.EXTERNAL){
+			if(!Files.exists(Path.of(this.info.getStaticHostPath()))){
+				hostNoFolder("No such host-able folder: "+this.info.getStaticHostPath());
+			}else {
+				http.externalStaticFileLocation(this.info.getStaticHostPath());
+			}
+		}
+	}
+
 	public final void startSession(){
 		http = Service.ignite();
 		http.ipAddress(GlobalProperties.hostname);
-		http.port(this.info.port);
+		http.port(this.info.getPort());
 
-		if(this.info.staticHostType == OutputSessionInfo.StaticHostType.INTERNAL){
-			http.staticFiles.location(this.info.staticHostPath);
-		}else if(this.info.staticHostType == OutputSessionInfo.StaticHostType.EXTERNAL){
-			http.externalStaticFileLocation(this.info.staticHostPath);
-		}
+		this.staticSetup();
 
 		http.get("/running", (request, response) -> true);
 

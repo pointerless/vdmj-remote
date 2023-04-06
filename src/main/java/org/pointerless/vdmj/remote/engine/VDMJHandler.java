@@ -16,7 +16,7 @@ public class VDMJHandler implements Runnable {
 	private final PairedPipedIOStream out;
 	private final PairedPipedIOStream err;
 
-	private String startupString;
+	private String startupString = null;
 
 	private final CommandQueue inputQueue = new CommandQueue();
 	private final CommandQueue outputQueue = new CommandQueue();
@@ -46,6 +46,7 @@ public class VDMJHandler implements Runnable {
 		this.send = new OutputStreamWriter(in.getOutputStream(), StandardCharsets.UTF_8);
 
 		this.commandRunner = new Thread(this::commandHandler);
+		this.commandRunner.setDaemon(true);
 		this.commandRunner.start();
 	}
 
@@ -131,6 +132,7 @@ public class VDMJHandler implements Runnable {
 	}
 
 	public void pickupStartupString() throws IOException {
+		if(this.startupString != null) return;
 		this.startupString = this.readReceive();
 	}
 

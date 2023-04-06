@@ -1,10 +1,23 @@
 ## HTTP test requests
-## Can be run with 'dot-http' (https://github.com/bayne/dot-http)
-## Or in any Jetbrains IntelliJ based IDE
-## Assumes running Conway.vdmsl, use http-client.env.json for vars
+## Can be run with:
+##  * 'dot-http' (https://github.com/bayne/dot-http)
+##  * in any Jetbrains IntelliJ based IDE with the HTTP client
+## Assumes running Conway.vdmsl, use http-client.env.json:dev environment for vars
 
 ### GET startup
 GET {{host}}/startup
+
+### GET outputs
+GET {{host}}/outputs
+
+> {%
+let outputs = response.body
+if(outputs[0] !== null && outputs[0].module == "Conway"){
+    client.global.set("output", JSON.stringify(outputs[0]));
+}else{
+    client.global.set("output", "");
+}
+ %}
 
 ### POST exec: help
 POST {{host}}/exec
@@ -28,3 +41,8 @@ Content-Type: text/plain
 
 p GOSPER_GLIDER_GUN
 
+### POST startOutput
+POST {{host}}/startOutput
+Content-Type: application/json
+
+{{output}}

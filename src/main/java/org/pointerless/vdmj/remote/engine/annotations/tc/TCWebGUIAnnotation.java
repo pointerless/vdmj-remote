@@ -13,6 +13,7 @@ import com.fujitsu.vdmj.typechecker.NameScope;
 import org.pointerless.vdmj.remote.engine.annotations.RemoteOutputRegistry;
 import org.pointerless.vdmj.remote.engine.annotations.VDMJRemoteOutputAnnotation;
 import org.pointerless.vdmj.remote.gui.Output;
+import org.pointerless.vdmj.remote.gui.VDMJOutputSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,6 +83,7 @@ public class TCWebGUIAnnotation extends TCAnnotation implements VDMJRemoteOutput
 		output.setType("GUI");
 		output.setLocation(staticWebLocation);
 		output.setDisplayName(moduleName+": "+nickname);
+		output.setSessionClass(VDMJOutputSession.class);
 		return output;
 	}
 

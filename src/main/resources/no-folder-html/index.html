@@ -5,6 +5,35 @@
     <title>No Such Folder</title>
 </head>
 <body>
-  <h1>No such folder/content found, check your annotation</h1>
+    <h1>Error in hosting:</h1>
+    <h2 id="reason" style="color: red"></h2>
+    <h2>Check your annotation</h2>
+    <script>
+        // This ensures compatability with the <iframe> container in vscode
+        // this is modified from stack overflow answer
+        window.addEventListener("load", function(){
+            if(window.self === window.top) return;
+            const send_height = function () {
+                let height = document.getElementsByTagName("html")[0].offsetHeight;
+                parent.postMessage({"height": height}, "*");
+            };
+            send_height();
+            window.addEventListener("resize", send_height);
+            let observer = new MutationObserver(send_height);
+            let config = { attributes: true, childList: true, characterData: true, subtree:true};
+            observer.observe(window.document, config);
+        });
+
+        let reasonOutput = document.getElementById("reason");
+        fetch("/reason").then((response) => {
+            response.text().then((reason) => {
+                reasonOutput.innerText = reason;
+            }).catch((err) => {
+                reasonOutput.innerText = "Could not parse reason: "+err;
+            })
+        }).catch((err) => {
+            reasonOutput.innerText = "Could not fetch reason: "+err;
+        })
+    </script>
 </body>
 </html>

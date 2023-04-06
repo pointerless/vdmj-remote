@@ -45,6 +45,7 @@ public class ExtendedMain {
 	public ExtendedMain(VDMJHandler handler, int serverPort) throws IOException {
 		this.handler = handler;
 		handlerThread = new Thread(handler);
+		handlerThread.setDaemon(true);
 		handlerThread.start();
 		handler.pickupStartupString();
 
