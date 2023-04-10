@@ -20,7 +20,8 @@
  * See http://en.wikipedia.org/wiki/Conway%27s_Game_of_Life.
  * Modelled in VDM-SL by Nick Battle and Peter Gorm Larsen
  */
---@WebGUI("GUI", "/Users/nljsf/Local/reps/git/students/HarryHughes/conway-web/build")
+-- Do not commit changes to this next line, change path for your built ConwayWeb
+--@WebGUI("GUI", "<ConwayWeb/build path>")
 module Conway
 
 exports all
