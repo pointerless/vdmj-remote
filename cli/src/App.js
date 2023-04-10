@@ -1,6 +1,5 @@
 import {ReactTerminal} from "react-terminal";
 import BackendAPI from "./backend-api";
-import {Button, ButtonGroup, Tab, Tabs} from "react-bootstrap";
 import {useEffect, useState} from "react";
 import {CircleLoader} from "react-spinners";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
