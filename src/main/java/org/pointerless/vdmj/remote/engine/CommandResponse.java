@@ -6,6 +6,13 @@ import lombok.Data;
 @Data
 public class CommandResponse {
 
+	public CommandResponse(){
+	}
+
+	public CommandResponse(String message){
+		this.message = message;
+	}
+
 	private String message;
 
 	@JsonIgnore

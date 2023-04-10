@@ -12,8 +12,8 @@ import com.fujitsu.vdmj.typechecker.Environment;
 import com.fujitsu.vdmj.typechecker.NameScope;
 import org.pointerless.vdmj.remote.engine.annotations.RemoteOutputRegistry;
 import org.pointerless.vdmj.remote.engine.annotations.VDMJRemoteOutputAnnotation;
-import org.pointerless.vdmj.remote.gui.Output;
-import org.pointerless.vdmj.remote.gui.VDMJOutputSession;
+import org.pointerless.vdmj.remote.rest.Output;
+import org.pointerless.vdmj.remote.rest.VDMJOutputSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

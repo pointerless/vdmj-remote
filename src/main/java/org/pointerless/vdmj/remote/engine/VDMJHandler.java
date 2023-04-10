@@ -140,6 +140,10 @@ public class VDMJHandler implements Runnable {
 		return this.startupString;
 	}
 
+	public void setStartupString(String startupString){
+		this.startupString = startupString;
+	}
+
 	@Override
 	public void run() {
 		try {

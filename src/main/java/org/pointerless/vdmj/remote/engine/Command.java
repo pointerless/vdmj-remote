@@ -59,6 +59,10 @@ public class Command {
 		this.requested = Instant.now();
 	}
 
+	public Command(){
+		this.command = "";
+	}
+
 	public void onQueued(){
 		this.queued = Instant.now();
 	}

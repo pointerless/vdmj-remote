@@ -1,4 +1,4 @@
-package org.pointerless.vdmj.remote.gui;
+package org.pointerless.vdmj.remote.rest;
 
 import lombok.extern.slf4j.Slf4j;
 import org.pointerless.vdmj.remote.GlobalProperties;
@@ -7,8 +7,6 @@ import spark.Service;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Optional;
 
 @Slf4j
 public abstract class OutputSession {
@@ -62,6 +60,13 @@ public abstract class OutputSession {
 		return this.info;
 	}
 
+	public final void awaitInitialization(){
+		this.http.awaitInitialization();
+	}
+
+	public final void awaitStop(){
+		this.http.awaitStop();
+	}
 
 	protected void run(Service http){
 

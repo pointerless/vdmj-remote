@@ -49,3 +49,13 @@ body{
     transform: rotate(360deg);
   }
 }
+
+.fa-rotate-right {
+  margin-left: 5px;
+  border-radius: 2px;
+  padding: 1px;
+}
+
+.fa-rotate-right:hover {
+  background: #1E1E1E52;
+}

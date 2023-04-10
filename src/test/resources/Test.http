@@ -46,3 +46,6 @@ POST {{host}}/startOutput
 Content-Type: application/json
 
 {{output}}
+
+### POST reload
+POST  http://127.0.0.1:42413/reload

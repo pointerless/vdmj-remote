@@ -76,6 +76,25 @@ class BackendAPI {
         })
     }
 
+    stopOutput(output) {
+        return new Promise((resolve, reject) => {
+            const req = new Request(`${this.route}/stopOutput`);
+            const init = {
+                method: "POST",
+                body: JSON.stringify(output)
+            }
+            fetch(req, init).then(response => {
+                response.text().then(textResponse => {
+                    resolve(textResponse.trim() === "true");
+                }).catch(reason => {
+                    reject(reason);
+                })
+            }).catch(reason => {
+                reject(reason);
+            })
+        })
+    }
+
 }
 
 export default BackendAPI;

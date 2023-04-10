@@ -1,4 +1,4 @@
-package org.pointerless.vdmj.remote.gui;
+package org.pointerless.vdmj.remote.rest;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
@@ -49,5 +49,13 @@ public class Output {
 	@Override
 	public int hashCode() {
 		return Objects.hash(id);
+	}
+
+	public boolean fullyEquals(Object o){
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		Output output = (Output)o;
+		return module.equals(output.module) && type.equals(output.type) && location.equals(output.location) &&
+				displayName.equals(output.displayName) && sessionClass.equals(output.sessionClass);
 	}
 }

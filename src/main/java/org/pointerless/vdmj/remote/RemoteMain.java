@@ -4,10 +4,13 @@ import com.beust.jcommander.*;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.pointerless.vdmj.remote.engine.VDMJHandler;
-import org.pointerless.vdmj.remote.gui.MainOutputSession;
+import org.pointerless.vdmj.remote.rest.MainOutputSession;
 
 import java.io.*;
-import java.nio.file.Files;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.*;
 
 /**
@@ -15,7 +18,7 @@ import java.util.*;
  * interactions
  */
 @Slf4j
-public class ExtendedMain {
+public class RemoteMain {
 	private final VDMJHandler handler;
 
 	private final Thread handlerThread;
@@ -25,10 +28,7 @@ public class ExtendedMain {
 	@Data
 	public static class Args {
 
-		@Parameter(names = {"--source", "-s"}, description = "Source as a string")
-		private String source;
-
-		@Parameter(names = {"--sourcePath"}, description = "Source as a path")
+		@Parameter(names = {"--sourcePath", "-s"}, description = "Source as a path, dir/files", required = true)
 		private String sourcePath;
 
 		@Parameter(names = {"--type", "-t"}, description = "Source type ([vdmrt, vdmsl, vdmpp])", required = true)
@@ -37,12 +37,15 @@ public class ExtendedMain {
 		@Parameter(names = {"--port", "-p"}, description = "Port to bind on, if 0 random port will be used")
 		private int serverPort = 0;
 
+		@Parameter(names = {"--heartbeat"}, description = "Socket to connect heartbeat client to, if 0 will be random")
+		private int heartbeatPort = 0;
+
 		@Parameter(names = {"--help", "-h"}, description = "Print this help dialogue", help = true)
 		private boolean help = false;
 
 	}
 
-	public ExtendedMain(VDMJHandler handler, int serverPort) throws IOException {
+	public RemoteMain(VDMJHandler handler, int serverPort) throws IOException {
 		this.handler = handler;
 		handlerThread = new Thread(handler);
 		handlerThread.setDaemon(true);
@@ -55,7 +58,6 @@ public class ExtendedMain {
 	}
 
 	public static void main(String[] argv) throws IOException {
-
 		Args args = new Args();
 		JCommander commander = null;
 
@@ -89,15 +91,7 @@ public class ExtendedMain {
 
 		String pathToSource = args.sourcePath;
 
-		if(args.source != null){
-			File sourceFile = Files.createTempFile("source", "vdm").toFile();
-			try(PrintStream sourceFileOutput = new PrintStream(sourceFile)){
-				sourceFileOutput.print(args.source);
-			}catch(Exception e){
-				throw new RuntimeException("Could not create file from second arg: '"+args.source+"'");
-			}
-			pathToSource = sourceFile.getAbsolutePath();
-		}else if(pathToSource == null){
+		if(pathToSource == null){
 			System.err.println("Need either source or source path");
 			commander.usage();
 			return;
@@ -113,7 +107,21 @@ public class ExtendedMain {
 			args.serverPort = MainOutputSession.getRandomPort();
 		}
 
-		ExtendedMain main = new ExtendedMain(handler, args.serverPort);
+		Heartbeat heartbeat = new Heartbeat(args.heartbeatPort);
+		Thread heartbeatThread = new Thread(heartbeat);
+		heartbeatThread.setDaemon(true);
+		heartbeatThread.start();
+
+		RemoteMain main = new RemoteMain(handler, args.serverPort);
+
+		main.mainOutputSession.awaitInitialization();
+
+		log.info("VDMJ Remote Session Started: "+args.serverPort);
+
+		main.mainOutputSession.awaitStop();
+
+		// heartbeat.stop();
+		// heartbeatThread.interrupt();
 	}
 
 }

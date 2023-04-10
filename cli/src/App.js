@@ -1,8 +1,10 @@
 import {ReactTerminal} from "react-terminal";
 import BackendAPI from "./backend-api";
-import {Tab, Tabs} from "react-bootstrap";
+import {Button, ButtonGroup, Tab, Tabs} from "react-bootstrap";
 import {useEffect, useState} from "react";
 import {CircleLoader} from "react-spinners";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { icon } from '@fortawesome/fontawesome-svg-core/import.macro'
 import './App.css';
 
 function unravelIntoSpans(text, keyStart, delim='\n'){
@@ -32,16 +34,20 @@ function App() {
     const [outputs, setOutputs] = useState(null);
     const [runningOutputs, setRunningOutputs] = useState(new Map());
 
-    useEffect(() => {
+    const refreshAll = () => {
         backendAPI.getOutputs()
             .then(outputArr => {
                 setOutputs(outputArr);
-            }).catch(err => {})
+            }).catch(err => {console.error(err)})
 
         backendAPI.getStartup()
             .then(startup => {
                 setStartupMessage(unravelIntoSpans(startup, "startup"));
-            }).catch(err => {})
+            }).catch(err => {console.error(err)})
+    }
+
+    useEffect(() => {
+        refreshAll();
     }, [])
 
     const welcome = (
@@ -59,7 +65,7 @@ function App() {
 
     const startOutput = async (output) => {
         if(runningOutputs.has(output.id)){
-            return;
+            await backendAPI.stopOutput(output);
         }
         await backendAPI.startOutput(output)
             .then(info => {
@@ -116,7 +122,19 @@ function App() {
                             if (runningOutputs.has(output.id)) {
                                 container.push(
                                     <Tab eventKey={output.id}
-                                         title={output.displayName}>
+                                         title={
+                                             <>
+                                                 {output.displayName}
+                                                 <FontAwesomeIcon className="reload-button" onClick={
+                                                     async (e) => {
+                                                         await startOutput(output);
+                                                         setTimeout(() => {
+                                                             let iframe = document.getElementById(output.id);
+                                                             iframe.src += '';}, 100);
+                                                     }
+                                                 } icon={icon({name: "rotate-right", style: "solid"})}/>
+                                             </>
+                                         }>
                                         <iframe id={output.id} title={output.id}
                                                 src={runningOutputs.get(output.id).accessURL}
                                                 style={{

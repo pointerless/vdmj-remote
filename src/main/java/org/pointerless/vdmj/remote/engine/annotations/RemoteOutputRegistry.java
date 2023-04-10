@@ -15,4 +15,8 @@ public class RemoteOutputRegistry {
 		return outputSet;
 	}
 
+	public static void clear(){
+		outputSet.clear();
+	}
+
 }
