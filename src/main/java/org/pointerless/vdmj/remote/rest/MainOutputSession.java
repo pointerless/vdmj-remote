@@ -151,12 +151,6 @@ public class MainOutputSession extends VDMJOutputSession {
 			return objectMapper.writeValueAsString(out);
 		});
 
-		http.post("/stopMain", (request, response) -> {
-			// TODO: More graceful exit system, scheduling etc.
-			System.exit(0);
-			return null;
-		});
-
 		super.run(http);
 	}
 }
