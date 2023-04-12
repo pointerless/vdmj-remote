@@ -3,6 +3,7 @@ package org.pointerless.vdmj.remote.engine;
 import com.fujitsu.vdmj.messages.Console;
 import com.fujitsu.vdmj.messages.ConsolePrintWriter;
 import com.fujitsu.vdmj.plugins.VDMJ;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -10,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 /**
  * Handles VDMJ IO in a thread-safe manner.
  */
+@Slf4j
 public class VDMJHandler implements Runnable {
 
 	private final PairedPipedIOStream in;
@@ -45,7 +47,7 @@ public class VDMJHandler implements Runnable {
 		this.error = new InputStreamReader(err.getInputStream(), StandardCharsets.UTF_8);
 		this.send = new OutputStreamWriter(in.getOutputStream(), StandardCharsets.UTF_8);
 
-		this.commandRunner = new Thread(this::commandHandler);
+		this.commandRunner = new Thread(this::commandHandler, "VDMJ-Handler-Command-Runner");
 		this.commandRunner.setDaemon(true);
 		this.commandRunner.start();
 	}
@@ -105,7 +107,7 @@ public class VDMJHandler implements Runnable {
 			while((i = receive.read()) != -1){
 				char c = (char)i;
 				if(c == '\n') newLined = true;
-				else if(newLined && c == '>'){
+				else if(c == '>' && (newLined || strOut.length() == 0)){
 					//noinspection ResultOfMethodCallIgnored
 					receive.read();
 					break;
@@ -149,6 +151,7 @@ public class VDMJHandler implements Runnable {
 		try {
 			VDMJ.main(args);
 		}catch (Exception e){
+			log.debug("VDMJ thread exited with the following error: "+e.getMessage());
 			System.exit(-1);
 		}
 	}

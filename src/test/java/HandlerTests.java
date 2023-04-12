@@ -1,3 +1,5 @@
+import com.fujitsu.vdmj.runtime.ModuleInterpreter;
+import com.fujitsu.vdmj.values.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -6,8 +8,14 @@ import org.junit.jupiter.api.TestInstance;
 import org.pointerless.vdmj.remote.engine.Command;
 import org.pointerless.vdmj.remote.engine.VDMJHandler;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -20,18 +28,15 @@ public class HandlerTests {
 	private Thread handlerThread;
 
 	@BeforeAll()
-	public void setup() {
-		URL conwayVDMSL = this.getClass().getClassLoader().getResource("Conway.vdmsl");
-
-		assertNotNull(conwayVDMSL, "Couldn't find Conway.vdmsl in resources");
+	public void setup(){
 
 		String[] vdmjArgs = {
-				"-i", "-annotations", "-vdmsl", conwayVDMSL.toString()
+				"-i", "-annotations", "-vdmsl", TestHelper.getTmpConway().toString()
 		};
 
 		try {
 			handler = new VDMJHandler(vdmjArgs);
-			handlerThread = new Thread(handler);
+			handlerThread = new Thread(handler, "HandlerTests-VDMJ-Handler-Thread");
 			handlerThread.start();
 
 			handler.pickupStartupString();
@@ -70,6 +75,9 @@ public class HandlerTests {
 
 	@AfterAll
 	public void cleanup(){
-		this.handlerThread.interrupt();
+		if(handlerThread != null){
+			this.handlerThread.interrupt();
+		}
+		TestHelper.deleteTmpConway();
 	}
 }

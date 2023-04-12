@@ -8,14 +8,20 @@ import org.junit.jupiter.api.TestInstance;
 import org.pointerless.vdmj.remote.SerializationHelper;
 import org.pointerless.vdmj.remote.engine.Command;
 import org.pointerless.vdmj.remote.engine.VDMJHandler;
+import org.pointerless.vdmj.remote.ipc.*;
 import org.pointerless.vdmj.remote.rest.MainOutputSession;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.*;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,6 +38,10 @@ public class MainOutputSessionTests {
 	private MainOutputSession session;
 	private int sessionPort;
 
+	private ServerSocket serverSocket;
+	private Socket ipcioSocket;
+	private IPCIO ipcio;
+
 	private final HttpClient httpClient = HttpClient.newHttpClient();
 
 	private static final List<String> expectedStartup = List.of(
@@ -43,18 +53,27 @@ public class MainOutputSessionTests {
 
 	@BeforeAll
 	public void setup(){
-
-		URL conwayVDMSL = this.getClass().getClassLoader().getResource("Conway.vdmsl");
-
-		assertNotNull(conwayVDMSL, "Couldn't find Conway.vdmsl in resources");
+		try {
+			log.info("Setting up IPCIO server");
+			serverSocket = new ServerSocket(0);
+			if(IPCIOFactory.available()){
+				fail("IPCIO already built");
+			}else{
+				ipcio = IPCIOFactory.createSocketIPCIO(new Socket(InetAddress.getLoopbackAddress(), serverSocket.getLocalPort()));
+			}
+			ipcioSocket = serverSocket.accept();
+			log.info("IPCIO server set up");
+		} catch (IOException e) {
+			fail("Couldn't start IPCIO server: "+e.getMessage());
+		}
 
 		String[] vdmjArgs = {
-				"-i", "-annotations", "-vdmsl", conwayVDMSL.toString()
+				"-i", "-annotations", "-vdmsl", TestHelper.getTmpConway().toString()
 		};
 
 		try {
 			handler = new VDMJHandler(vdmjArgs);
-			handlerThread = new Thread(handler);
+			handlerThread = new Thread(handler, "MainOutputSessionTests-VDMJ-Handler-Thread");
 			handlerThread.start();
 
 			handler.pickupStartupString();
@@ -71,6 +90,15 @@ public class MainOutputSessionTests {
 		sessionPort = MainOutputSession.getRandomPort();
 		session = MainOutputSession.mainOutputSession(handler, sessionPort);
 		session.startSession();
+
+		try {
+			BufferedReader socketReader = new BufferedReader(new InputStreamReader(ipcioSocket.getInputStream()));
+			IPCLog startLog = objectMapper.readValue(socketReader.readLine(), IPCLog.class);
+			assertEquals(IPCLogType.START, startLog.getType());
+			log.info("Received valid START IPC log from OutputSession");
+		}catch (IOException e){
+			fail("Could not read START message: "+e.getMessage());
+		}
 	}
 
 
@@ -160,10 +188,71 @@ public class MainOutputSessionTests {
 
 	}
 
+	@Test
+	public void testValidHeartbeat(){
+		UUID requestId = UUID.randomUUID();
+		try {
+			PrintWriter writer = new PrintWriter(ipcioSocket.getOutputStream(), true);
+			BufferedReader reader = new BufferedReader(new InputStreamReader(ipcioSocket.getInputStream()));
+			IPCLog response = null;
+			try{
+				IPCInstruction instruction = new IPCInstruction();
+				instruction.setType(IPCInstructionType.HEARTBEAT);
+				instruction.setMessage(requestId.toString());
+				try {
+					writer.println(objectMapper.writeValueAsString(instruction));
+					writer.flush();
+				}catch (IOException e){
+					fail("Couldn't send instruction");
+				}
+
+				String responseLine = reader.readLine();
+				response = objectMapper.readValue(responseLine, IPCLog.class);
+			}catch (IOException e) {
+				fail("Couldn't read message from client socket: "+e.getMessage());
+			}
+			assertEquals(response.getType(), IPCLogType.EVENT);
+			assertEquals(requestId.toString(), response.getMessage());
+			log.info("Valid IPCIO Heartbeat success");
+		} catch (IOException e) {
+			fail("Couldn't send message through client socket: "+e.getMessage());
+		}
+	}
+
+	@Test
+	public void testInvalidHeartbeat(){
+		String invalidHeartbeatRequest = "{ }";
+		try {
+			PrintWriter writer = new PrintWriter(ipcioSocket.getOutputStream(), true);
+			BufferedReader reader = new BufferedReader(new InputStreamReader(ipcioSocket.getInputStream()));
+			try{
+				log.info("Sending HeartbeatRequest: "+invalidHeartbeatRequest);
+				writer.println(invalidHeartbeatRequest);
+				writer.flush();
+				String responseLine = reader.readLine();
+				IPCLog invalidMessageLog = objectMapper.readValue(responseLine, IPCLog.class);
+				assertEquals("Invalid message", invalidMessageLog.getMessage(),
+						"Invalid response for invalid request: "+responseLine);
+				log.info("Output valid for invalid request: "+responseLine);
+			}catch (IOException e) {
+				fail("Couldn't read message from client socket: "+e.getMessage());
+			}
+		} catch (IOException e) {
+			fail("Couldn't send message through client socket: "+e.getMessage());
+		}
+	}
+
 	@AfterAll
 	public void cleanup(){
+		try {
+			ipcio.close();
+			serverSocket.close();
+		} catch (Exception e) {
+			fail("Couldn't close IPCIO: "+e.getMessage());
+		}
 		session.stopSession();
 		handlerThread.interrupt();
+		TestHelper.deleteTmpConway();
 	}
 
 

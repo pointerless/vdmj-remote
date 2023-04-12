@@ -2,8 +2,7 @@ package org.pointerless.vdmj.remote;
 
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
 import java.util.Properties;
 

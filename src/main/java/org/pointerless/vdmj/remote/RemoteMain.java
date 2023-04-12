@@ -4,13 +4,11 @@ import com.beust.jcommander.*;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.pointerless.vdmj.remote.engine.VDMJHandler;
+import org.pointerless.vdmj.remote.ipc.IPCIOFactory;
 import org.pointerless.vdmj.remote.rest.MainOutputSession;
 
 import java.io.*;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import java.net.Socket;
 import java.util.*;
 
 /**
@@ -37,8 +35,12 @@ public class RemoteMain {
 		@Parameter(names = {"--port", "-p"}, description = "Port to bind on, if 0 random port will be used")
 		private int serverPort = 0;
 
-		@Parameter(names = {"--heartbeat"}, description = "Socket to connect heartbeat client to, if 0 will be random")
-		private int heartbeatPort = 0;
+		@Parameter(names = {"--ipcAddress", "-i"}, description = "Address to connect to for JSON communication with" +
+				" parent process, must match '<hostname>:<port>'")
+		private String ipcAddress;
+
+		//@Parameter(names = {"--heartbeat"}, description = "Socket to connect heartbeat client to, if 0 will be random")
+		//private int heartbeatPort = 0;
 
 		@Parameter(names = {"--help", "-h"}, description = "Print this help dialogue", help = true)
 		private boolean help = false;
@@ -47,7 +49,7 @@ public class RemoteMain {
 
 	public RemoteMain(VDMJHandler handler, int serverPort) throws IOException {
 		this.handler = handler;
-		handlerThread = new Thread(handler);
+		handlerThread = new Thread(handler, "VDMJ-Handler-Thread");
 		handlerThread.setDaemon(true);
 		handlerThread.start();
 		handler.pickupStartupString();
@@ -101,27 +103,39 @@ public class RemoteMain {
 				"-i", "-annotations", /*"-exceptions", ??*/ "-"+args.sourceType, pathToSource
 		};
 
+		if(args.ipcAddress != null){
+			if(args.ipcAddress.isEmpty()){
+				System.err.println("IPC Address must not be empty if being used");
+				commander.usage();
+				System.exit(-1);
+			}
+			if(args.ipcAddress.split(":").length != 2){
+				System.err.println("IPC Address must match '<hostname>:<port>'");
+				commander.usage();
+				System.exit(-1);
+			}
+
+			Socket socket = new Socket(args.ipcAddress.split(":")[0],
+					Integer.parseInt(args.ipcAddress.split(":")[1]));
+
+			if(socket.isConnected()){
+				IPCIOFactory.createSocketIPCIO(socket);
+			}else{
+				System.err.println("IPC could not connect");
+				System.exit(-1);
+			}
+		}else{
+			IPCIOFactory.createIPCIO(new BufferedReader(new InputStreamReader(System.in)), new PrintWriter(System.out));
+		}
+
+
 		VDMJHandler handler = new VDMJHandler(vdmjArgs);
 
 		if(args.serverPort == 0){
 			args.serverPort = MainOutputSession.getRandomPort();
 		}
 
-		Heartbeat heartbeat = new Heartbeat(args.heartbeatPort);
-		Thread heartbeatThread = new Thread(heartbeat);
-		heartbeatThread.setDaemon(true);
-		heartbeatThread.start();
-
 		RemoteMain main = new RemoteMain(handler, args.serverPort);
-
-		main.mainOutputSession.awaitInitialization();
-
-		log.info("VDMJ Remote Session Started: "+args.serverPort);
-
-		main.mainOutputSession.awaitStop();
-
-		// heartbeat.stop();
-		// heartbeatThread.interrupt();
 	}
 
 }
