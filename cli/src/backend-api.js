@@ -29,11 +29,19 @@ class BackendAPI {
                 method: "GET"
             }
             fetch(req, init).then(response => {
-                response.json().then(jsonResponse => {
-                    resolve(jsonResponse);
-                }).catch(reason => {
-                    reject(reason);
-                })
+                if(response.ok){
+                    response.json().then(jsonResponse => {
+                        resolve(jsonResponse);
+                    }).catch(reason => {
+                        reject(reason);
+                    })
+                }else{
+                    response.text().then(textResponse => {
+                        resolve(textResponse);
+                    }).catch(reason => {
+                        reason(reason);
+                    })
+                }
             }).catch(reason => {
                 reject(reason);
             })
@@ -48,9 +56,15 @@ class BackendAPI {
                 body: command
             }
             fetch(req, init).then(response => {
-                response.json().then(jsonResponse => {
-                    resolve(jsonResponse.response);
-                }).catch(err => reject(err));
+                if(response.ok){
+                    response.json().then(jsonResponse => {
+                        resolve(jsonResponse.response);
+                    }).catch(err => reject(err));
+                }else{
+                    response.text().then(textResponse => {
+                        reject(textResponse);
+                    }).catch(err => reject(err));
+                }
             }).catch(reason => {
                 reject(reason);
             })

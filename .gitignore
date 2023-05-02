@@ -42,3 +42,4 @@ build/
 /.idea/workspace.xml
 /dependency-reduced-pom.xml
 /src/main/resources/cli/
+/src/test/resources/Conway.vdmsl

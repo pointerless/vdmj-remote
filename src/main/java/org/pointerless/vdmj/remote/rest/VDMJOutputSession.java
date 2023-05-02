@@ -2,7 +2,9 @@ package org.pointerless.vdmj.remote.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.pointerless.vdmj.remote.SerializationHelper;
+import org.pointerless.vdmj.remote.SessionException;
 import org.pointerless.vdmj.remote.engine.Command;
+import org.pointerless.vdmj.remote.engine.CommandResponse;
 import org.pointerless.vdmj.remote.engine.VDMJHandler;
 import spark.Service;
 
@@ -33,7 +35,7 @@ public class VDMJOutputSession extends OutputSession {
 	protected void run(Service http){
 		http.post("/exec", (request, response) -> {
 			response.type("application/json");
-			Command out = this.handler.runCommand(request.body());
+			Command out = outFilter(this.handler.runCommand(inFilter(request.body())));
 			return objectMapper.writeValueAsString(out);
 		});
 
@@ -44,6 +46,30 @@ public class VDMJOutputSession extends OutputSession {
 		});
 
 		super.run(http);
+	}
+
+	private static Command inFilter(String reqBody) throws SessionException {
+		if(reqBody.trim().matches("^(?:q|quit)\\s*.*")){
+			throw new SessionException("Cannot quit via terminal, please use REST request");
+		}
+
+		return new Command(reqBody);
+	}
+
+	private static Command outFilter(Command command) throws SessionException{
+		if(command.getCommand().trim().matches("help")){
+			StringBuilder newMessage = new StringBuilder();
+			for(String line : command.getResponse().getMessage().split("\n")){
+				if(!line.trim().matches("\\[q]uit.*")){
+					newMessage.append(line).append("\n");
+				}
+			}
+			command.getResponse().setMessage(newMessage.toString());
+		}else if(command.getResponse().getMessage().trim().matches("^Unknown\\scommand\\s'.*'\\.\\s.*")){
+			throw new SessionException(command.getResponse().getMessage());
+		}
+
+		return command;
 	}
 
 }

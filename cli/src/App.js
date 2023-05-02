@@ -58,9 +58,11 @@ function App() {
     );
 
     const commandHandler = async (command, args) => {
-        let out = "";
-        await backendAPI.execute(`${command} ${args}`).then(o => out = o)
-        return unravelIntoSpans(out, command);
+        return new Promise((resolve) => {
+            backendAPI.execute(`${command} ${args}`)
+                .then(o => resolve(unravelIntoSpans(o, command)))
+                .catch(reason => resolve((<p style={{color: "darkred"}}>{reason}</p>)))
+        })
     }
 
     const startOutput = async (output) => {
@@ -103,7 +105,7 @@ function App() {
     return (
         <Tabs defaultActiveKey="terminal" id="outputTabs" className="mb-3" onSelect={handleTabChange}>
             <Tab eventKey="terminal" title="Terminal">
-                <div className="App">
+                <div className="App" style={{resize: "vertical", overflow: "hidden",     border: "1px solid"}}>
                     <ReactTerminal
                         defaultHandler={commandHandler}
                         theme="material-dark"
