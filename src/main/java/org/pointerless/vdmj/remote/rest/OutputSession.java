@@ -52,7 +52,7 @@ public abstract class OutputSession {
 		this.run(http);
 	}
 
-	public final void stopSession(){
+	public void stopSession(){
 		this.http.stop();
 	}
 
@@ -69,6 +69,28 @@ public abstract class OutputSession {
 	}
 
 	protected void run(Service http){
+
+		// Allow CORS
+
+		http.options("/*", (req, res) -> {
+			String accessControlRequestHeaders = req.headers("Access-Control-Request-Headers");
+			if (accessControlRequestHeaders != null) {
+				res.header("Access-Control-Allow-Headers", accessControlRequestHeaders);
+			}
+
+			String accessControlRequestMethod = req.headers("Access-Control-Request-Method");
+			if (accessControlRequestMethod != null) {
+				res.header("Access-Control-Allow-Methods", accessControlRequestMethod);
+			}
+
+			return "OK";
+		});
+
+		http.before((req, res) -> {
+			res.header("Access-Control-Allow-Origin", "*");
+			res.header("Access-Control-Allow-Headers", "*");
+			res.type("application/json");
+		});
 
 		// Deal with default thrown exception
 		http.exception(SessionException.class, (e, request, response) -> {

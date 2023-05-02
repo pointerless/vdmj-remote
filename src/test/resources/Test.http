@@ -24,6 +24,17 @@ POST {{host}}/exec
 
 help
 
+### POST exec: load
+POST {{host}}/exec
+
+load ./src/test/resources/Example.vdmsl
+
+### POST exec: unload
+POST {{host}}/exec
+
+unload ./src/test/resources/Example.vdmsl
+
+
 ### POST exec: env
 POST {{host}}/exec
 
@@ -48,4 +59,4 @@ Content-Type: application/json
 {{output}}
 
 ### POST reload
-POST  http://127.0.0.1:42413/reload
+POST  http://{{host}}/reload

@@ -1,24 +1,31 @@
 package org.pointerless.vdmj.remote.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import lombok.extern.slf4j.Slf4j;
 import org.pointerless.vdmj.remote.GlobalProperties;
 import org.pointerless.vdmj.remote.SessionException;
 import org.pointerless.vdmj.remote.engine.Command;
 import org.pointerless.vdmj.remote.engine.VDMJHandler;
 import org.pointerless.vdmj.remote.engine.annotations.RemoteOutputRegistry;
 import org.pointerless.vdmj.remote.engine.annotations.VDMJRemoteOutputAnnotation;
+import org.pointerless.vdmj.remote.ipc.*;
 import spark.Service;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
  * Main Output object for VDMJ Remote, requires VDMJHandler
  * and port, setting rest up from GlobalProperties
  */
+@Slf4j
 public class MainOutputSession extends VDMJOutputSession {
+
+	private final IPCIO ipcio;
+	private final Thread ipcInstructionThread;
 
 	private Map<UUID, Output> outputs = new HashMap<>();
 	private final Map<Output, OutputSession> outputSessionMap = new HashMap<>();
@@ -31,7 +38,67 @@ public class MainOutputSession extends VDMJOutputSession {
 	 */
 	private MainOutputSession(OutputSessionInfo info, VDMJHandler handler) {
 		super(info, handler);
-		this.refreshOutputs();
+		ipcio = IPCIOFactory.getIPCIO();
+		ipcInstructionThread = new Thread(this::ipcInstructionHandler, "Main-Output-IPCInstruction-Thread");
+		ipcInstructionThread.setDaemon(true);
+		ipcInstructionThread.start();
+		refreshOutputs();
+	}
+
+	private void ipcInstructionHandler(){
+		while(!Thread.currentThread().isInterrupted()){
+			ipcio.pollForInstructions(100, TimeUnit.MILLISECONDS).ifPresent(ipcInstruction -> {
+				if(ipcInstruction.getType() != null) {
+					switch (ipcInstruction.getType()) {
+						case VDMJ:
+							if (ipcInstruction.getCommand() != null) {
+								try {
+									ipcio.write(IPCLog.event(objectMapper.writeValueAsString(
+											this.handler.runCommand(ipcInstruction.getCommand().getCommand()))
+									));
+								} catch (InterruptedException | JsonProcessingException e) {
+									ipcio.write(IPCLog.event("Command failed: " + e.getMessage()));
+								}
+							}
+							break;
+						case SESSION:
+							if (ipcInstruction.getSessionInstruction() != null) {
+								switch (ipcInstruction.getSessionInstruction()) {
+									case STOP:
+										this.stopSession();
+										break;
+									case RELOAD:
+										try {
+											this.runReload();
+											this.ipcio.write(IPCLog.event("Successfully reloaded"));
+										} catch (InterruptedException e) {
+											this.ipcio.write(IPCLog.event("Could not reload: " + e.getMessage()));
+										}
+										break;
+								}
+							}
+							break;
+						case HEARTBEAT:
+							ipcio.write(IPCLog.event(ipcInstruction.getMessage()));
+							break;
+					}
+				}else{
+					ipcio.write(IPCLog.event("Invalid message"));
+				}
+			});
+		}
+	}
+
+	@Override
+	public void stopSession() {
+		super.stopSession();
+		this.ipcio.write(IPCLog.stop("Exited gracefully"));
+		this.ipcInstructionThread.interrupt();
+		try {
+			this.ipcio.close();
+		}catch (Exception e){
+			log.debug("Closing IPCIO threw exception: "+e.getMessage());
+		}
 	}
 
 	private void refreshOutputs() {
@@ -143,14 +210,19 @@ public class MainOutputSession extends VDMJOutputSession {
 		http.get("/startup", (request, response) -> this.handler.getStartupString());
 
 		http.post("/reload", (request, response) -> {
-			RemoteOutputRegistry.clear();
 			response.type("application/json");
-			Command out = this.handler.runCommand("reload");
-			this.handler.setStartupString(out.getResponse().getMessage());
-			if(!out.isError()) this.refreshOutputs();
-			return objectMapper.writeValueAsString(out);
+			return objectMapper.writeValueAsString(this.runReload());
 		});
 
 		super.run(http);
+		ipcio.write(IPCLog.start("VDMJ-Remote is running"));
+	}
+
+	private Command runReload() throws InterruptedException {
+		RemoteOutputRegistry.clear();
+		Command out = this.handler.runCommand("reload");
+		this.handler.setStartupString(out.getResponse().getMessage());
+		if(!out.isError()) this.refreshOutputs();
+		return out;
 	}
 }

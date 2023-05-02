@@ -1,3 +1,5 @@
+import com.fujitsu.vdmj.runtime.ModuleInterpreter;
+import com.fujitsu.vdmj.values.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -5,9 +7,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.pointerless.vdmj.remote.engine.Command;
 import org.pointerless.vdmj.remote.engine.VDMJHandler;
+import org.pointerless.vdmj.remote.ipc.IPCIOFactory;
 
-import java.io.IOException;
-import java.net.URL;
+import java.io.*;
+import java.net.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -20,18 +25,26 @@ public class HandlerTests {
 	private Thread handlerThread;
 
 	@BeforeAll()
-	public void setup() {
-		URL conwayVDMSL = this.getClass().getClassLoader().getResource("Conway.vdmsl");
+	public void setup(){
+		log.info("Setting up IPCIO server");
 
-		assertNotNull(conwayVDMSL, "Couldn't find Conway.vdmsl in resources");
+		if(IPCIOFactory.available()){
+			try {
+				IPCIOFactory.getIPCIO().close();
+			} catch (Exception e) {
+				fail("Failed to close existing IPCIO");
+			}
+		}
+		IPCIOFactory.createIPCIO(new BufferedReader(Reader.nullReader()), new PrintWriter(Writer.nullWriter()));
+		log.info("IPCIO server set up");
 
 		String[] vdmjArgs = {
-				"-i", "-annotations", "-vdmsl", conwayVDMSL.toString()
+				"-i", "-annotations", "-vdmsl", TestHelper.getTmpConway().toString()
 		};
 
 		try {
 			handler = new VDMJHandler(vdmjArgs);
-			handlerThread = new Thread(handler);
+			handlerThread = new Thread(handler, "HandlerTests-VDMJ-Handler-Thread");
 			handlerThread.start();
 
 			handler.pickupStartupString();
@@ -50,8 +63,7 @@ public class HandlerTests {
 
 		assertLinesMatch(expectedStartup, actualStartup, "Startup did not match: "+actualStartup);
 
-		log.info("Finished starting server, continuing with tests");
-
+		log.info("Finished starting handler, continuing with tests");
 	}
 
 	@Test()
@@ -70,6 +82,9 @@ public class HandlerTests {
 
 	@AfterAll
 	public void cleanup(){
-		this.handlerThread.interrupt();
+		if(handlerThread != null){
+			this.handlerThread.interrupt();
+		}
+		TestHelper.deleteTmpConway();
 	}
 }

@@ -18,17 +18,18 @@ Use the JAR named:
 The CLI args are as follows:
 
 ```
---help, -h
-Print this help dialogue
---port, -p
-Port to bind on, if 0 random port will be used
-Default: 0
---source, -s
-Source as a string
---sourcePath
-Source as a path
-* --type, -t
-  Source type ([vdmrt, vdmsl, vdmpp])
+    --help, -h
+      Print this help dialogue
+    --ipcAddress, -i
+      Address to connect to for JSON communication with parent process, must 
+      match '<hostname>:<port>'
+    --port, -p
+      Port to bind on, if 0 random port will be used
+      Default: 0
+  * --sourcePath, -s
+      Source as a path, dir/files
+  * --type, -t
+      Source type ([vdmrt, vdmsl, vdmpp])
 ```
 
 For example:

@@ -3,6 +3,10 @@ package org.pointerless.vdmj.remote.engine;
 import com.fujitsu.vdmj.messages.Console;
 import com.fujitsu.vdmj.messages.ConsolePrintWriter;
 import com.fujitsu.vdmj.plugins.VDMJ;
+import lombok.extern.slf4j.Slf4j;
+import org.pointerless.vdmj.remote.ipc.IPCIO;
+import org.pointerless.vdmj.remote.ipc.IPCIOFactory;
+import org.pointerless.vdmj.remote.ipc.IPCLog;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -10,7 +14,10 @@ import java.nio.charset.StandardCharsets;
 /**
  * Handles VDMJ IO in a thread-safe manner.
  */
+@Slf4j
 public class VDMJHandler implements Runnable {
+
+	private final IPCIO ipcio;
 
 	private final PairedPipedIOStream in;
 	private final PairedPipedIOStream out;
@@ -30,6 +37,8 @@ public class VDMJHandler implements Runnable {
 	Thread commandRunner;
 
 	public VDMJHandler(String[] args) throws IOException {
+		this.ipcio = IPCIOFactory.getIPCIO();
+
 		Console.charset = StandardCharsets.UTF_8;
 
 		in = new PairedPipedIOStream();
@@ -45,7 +54,7 @@ public class VDMJHandler implements Runnable {
 		this.error = new InputStreamReader(err.getInputStream(), StandardCharsets.UTF_8);
 		this.send = new OutputStreamWriter(in.getOutputStream(), StandardCharsets.UTF_8);
 
-		this.commandRunner = new Thread(this::commandHandler);
+		this.commandRunner = new Thread(this::commandHandler, "VDMJ-Handler-Command-Runner");
 		this.commandRunner.setDaemon(true);
 		this.commandRunner.start();
 	}
@@ -74,8 +83,7 @@ public class VDMJHandler implements Runnable {
 		}
 	}
 
-	public Command runCommand(String commandText) throws InterruptedException {
-		Command command = new Command(commandText);
+	public Command runCommand(Command command) throws InterruptedException {
 		synchronized (this.inputQueue){
 			this.inputQueue.put(command);
 			this.inputQueue.notify();
@@ -92,6 +100,11 @@ public class VDMJHandler implements Runnable {
 		return this.outputQueue.take();
 	}
 
+	public Command runCommand(String commandText) throws InterruptedException {
+		Command command = new Command(commandText);
+		return this.runCommand(command);
+	}
+
 	private String pickupError() throws IOException {
 		//TODO
 		return "";
@@ -105,7 +118,7 @@ public class VDMJHandler implements Runnable {
 			while((i = receive.read()) != -1){
 				char c = (char)i;
 				if(c == '\n') newLined = true;
-				else if(newLined && c == '>'){
+				else if(c == '>' && (newLined || strOut.length() == 0)){
 					//noinspection ResultOfMethodCallIgnored
 					receive.read();
 					break;
@@ -149,6 +162,8 @@ public class VDMJHandler implements Runnable {
 		try {
 			VDMJ.main(args);
 		}catch (Exception e){
+			ipcio.write(IPCLog.fatalError("VDMJ thread exited with the following error: "+e.getMessage()));
+			log.error("VDMJ thread exited with the following error: "+e.getMessage());
 			System.exit(-1);
 		}
 	}
