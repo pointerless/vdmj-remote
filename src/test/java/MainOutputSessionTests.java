@@ -57,14 +57,15 @@ public class MainOutputSessionTests {
 			log.info("Setting up IPCIO server");
 			serverSocket = new ServerSocket(0);
 			if(IPCIOFactory.available()){
-				fail("IPCIO already built");
-			}else{
-				ipcio = IPCIOFactory.createSocketIPCIO(new Socket(InetAddress.getLoopbackAddress(), serverSocket.getLocalPort()));
+				IPCIOFactory.getIPCIO().close();
 			}
+			ipcio = IPCIOFactory.createSocketIPCIO(new Socket(InetAddress.getLoopbackAddress(), serverSocket.getLocalPort()));
 			ipcioSocket = serverSocket.accept();
 			log.info("IPCIO server set up");
 		} catch (IOException e) {
 			fail("Couldn't start IPCIO server: "+e.getMessage());
+		} catch (Exception e) {
+			fail("Failed to close existing IPCIO");
 		}
 
 		String[] vdmjArgs = {

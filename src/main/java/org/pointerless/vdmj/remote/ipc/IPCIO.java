@@ -82,7 +82,6 @@ public class IPCIO implements AutoCloseable{
 		}
 	}
 
-
 	@Override
 	public void close() throws Exception {
 		this.readingThread.interrupt();
