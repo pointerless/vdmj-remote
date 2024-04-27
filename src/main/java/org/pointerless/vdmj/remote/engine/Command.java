@@ -29,6 +29,7 @@ public class Command {
 			jsonGenerator.writeStringField("id", command.id.toString());
 			jsonGenerator.writeStringField("command", command.command);
 			jsonGenerator.writeStringField("response", command.response.getMessage());
+			jsonGenerator.writeBooleanField("error", command.isError());
 			jsonGenerator.writeStringField("requested", command.requested.toString());
 			jsonGenerator.writeStringField("queued", command.queued.toString());
 			jsonGenerator.writeStringField("executionStart", command.executionStart.toString());

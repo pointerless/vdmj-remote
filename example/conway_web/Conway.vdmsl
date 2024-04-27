@@ -20,8 +20,9 @@
  * See http://en.wikipedia.org/wiki/Conway%27s_Game_of_Life.
  * Modelled in VDM-SL by Nick Battle and Peter Gorm Larsen
  */
--- Do not commit changes to this next line, change path for your built ConwayWeb
---@WebGUI("GUI", "/home/harry/vdm-notebook-extension/vdmj-remote/example/conway_web/build")
+
+
+--@WebGUI("GUI", "./build/")
 module Conway
 
 exports all
@@ -29,10 +30,15 @@ exports all
 definitions
 
 values
+	TESTSTR = "aosidnoin";
 	GENERATE	= 3;		-- Number of neighbours to cause generation
 	SURVIVE		= {2, 3};	-- Numbers of neighbours to ensure survival, else death
 	
 types
+	TestType ::
+		a : seq1 of char
+		b : int;
+
 	Point ::				-- Plain is indexed by integers
 		x : int
 		y : int;
@@ -132,6 +138,8 @@ functions
 
 -- Test games from http://en.wikipedia.org/wiki/Conway%27s_Game_of_Life
 values
+	TESTINST = mk_TestType("aosnbdf", 2);
+
 	BLOCK = mk_Configuration(6, 500, { mk_Point(0,0), mk_Point(-1,0), mk_Point(0,-1), mk_Point(-1,-1) });
 
 	BLINKER = mk_Configuration(6, 500,{ mk_Point(-1,0), mk_Point(0,0), mk_Point(1,0) });

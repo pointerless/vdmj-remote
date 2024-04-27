@@ -8,7 +8,6 @@ To compile run:
 
 ```commandline
 mvn clean install
-mvn package
 ```
 
 Use the JAR named:
@@ -19,14 +18,15 @@ The CLI args are as follows:
 
 ```
 --help, -h
-Print this help dialogue
+  Print this help dialogue
+--ipcAddress, -i
+  Address to connect to for JSON communication with parent process, must 
+  match '<hostname>:<port>'
 --port, -p
-Port to bind on, if 0 random port will be used
-Default: 0
---source, -s
-Source as a string
---sourcePath
-Source as a path
+  Port to bind on, if 0 random port will be used
+  Default: 0
+* --sourcePath, -s
+  Source as a path, dir/files
 * --type, -t
   Source type ([vdmrt, vdmsl, vdmpp])
 ```
@@ -34,5 +34,9 @@ Source as a path
 For example:
 
 ```commandline
-java -jar vdmj-extended-1.0-SNAPSHOT-shaded.jar -p 8080 -t vdmsl --sourcePath Conway.vdmsl
+java -jar vdmj-remote-1.0-SNAPSHOT-shaded.jar -p 8080 -t vdmsl --sourcePath Conway.vdmsl
 ```
+
+To embed a webpage atop a script, use the `@WebGUI(<nick>, <path>)` annotation, as demonstrated in
+[src/test/resources/Conway.vdmsl](src/test/resources/Conway.vdmsl) replacing the path with the absolute
+path to your static web content folder (e.g. `build` for Node or `www` for legacy web development).
