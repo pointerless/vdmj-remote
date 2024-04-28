@@ -43,3 +43,5 @@ build/
 /dependency-reduced-pom.xml
 /src/main/resources/cli/
 /src/test/resources/Conway.vdmsl
+/example/conway_web/node_modules/
+/example/conway_web/build/
