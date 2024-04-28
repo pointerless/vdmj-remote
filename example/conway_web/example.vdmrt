@@ -1,0 +1,6 @@
+system Example
+
+instance variables
+    A : nat1 := 1;
+
+end Example

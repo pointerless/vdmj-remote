@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta
+      name="description"
+      content="Web site created using create-react-app"
+    />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <title>Conway's Game of Life VDM visualisation</title>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <!--
+      This HTML file is a template.
+      If you open it directly in the browser, you will see an empty page.
+
+      You can add webfonts, meta tags, or analytics to this file.
+      The build step will place the bundled scripts into the <body> tag.
+
+      To begin the development, run `npm start` or `yarn start`.
+      To create a production bundle, use `npm run build` or `yarn build`.
+    -->
+    <script>
+      // This ensures compatability with the <iframe> container in vscode
+      // this is modified from stack overflow answer
+      window.addEventListener("load", function(){
+        if(window.self === window.top) return;
+        const send_height = function () {
+          let height = document.getElementsByTagName("html")[0].offsetHeight;
+          parent.postMessage({"height": height}, "*");
+        };
+        send_height();
+        window.addEventListener("resize", send_height);
+        let observer = new MutationObserver(send_height);
+        let config = { attributes: true, childList: true, characterData: true, subtree:true};
+        observer.observe(window.document, config);
+      });
+    </script>
+  </body>
+
+</html>

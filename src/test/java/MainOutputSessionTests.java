@@ -106,11 +106,11 @@ public class MainOutputSessionTests {
 	private <T> HttpResponse<T> sendRequest(HttpRequest request, HttpResponse.BodyHandler<T> bodyHandler){
 		HttpResponse<T> response = null;
 		try {
-			log.info("Sending '"+request.uri()+"' request");
+            log.info("Sending '{}' request", request.uri());
 			response = httpClient.send(request, bodyHandler);
 			assertEquals(response.statusCode(), 200, "Invalid response code: "+ response.statusCode());
 
-			log.info("'"+request.uri()+"' response OK");
+            log.info("'{}' response OK", request.uri());
 		} catch (IOException e) {
 			fail("Couldn't send '"+request.uri()+"' request: "+e.getMessage());
 		} catch (InterruptedException e) {
@@ -227,14 +227,14 @@ public class MainOutputSessionTests {
 			PrintWriter writer = new PrintWriter(ipcioSocket.getOutputStream(), true);
 			BufferedReader reader = new BufferedReader(new InputStreamReader(ipcioSocket.getInputStream()));
 			try{
-				log.info("Sending HeartbeatRequest: "+invalidHeartbeatRequest);
+                log.info("Sending HeartbeatRequest: {}", invalidHeartbeatRequest);
 				writer.println(invalidHeartbeatRequest);
 				writer.flush();
 				String responseLine = reader.readLine();
 				IPCLog invalidMessageLog = objectMapper.readValue(responseLine, IPCLog.class);
 				assertEquals("Invalid message", invalidMessageLog.getMessage(),
 						"Invalid response for invalid request: "+responseLine);
-				log.info("Output valid for invalid request: "+responseLine);
+                log.info("Output valid for invalid request: {}", responseLine);
 			}catch (IOException e) {
 				fail("Couldn't read message from client socket: "+e.getMessage());
 			}

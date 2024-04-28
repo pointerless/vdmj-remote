@@ -44,7 +44,7 @@ env
 POST {{host}}/exec
 Content-Type: text/plain
 
-p tests()
+p function()
 
 ### POST exec: p GOSPER_GLIDER_GUN
 POST {{host}}/exec
