@@ -22,7 +22,7 @@ public class PairedPipedIOStream{
 		}
 	}
 
-	public static int pipeSize = 2 << 15;
+	public static int pipeSize = 2 << 6;
 
 	private final Input input;
 	private final Output output;
