@@ -1,0 +1,10 @@
+module Example
+
+exports all
+
+definitions
+
+values
+    VAL = 1;
+
+end Example

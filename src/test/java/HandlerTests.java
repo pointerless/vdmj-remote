@@ -7,13 +7,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.pointerless.vdmj.remote.engine.Command;
 import org.pointerless.vdmj.remote.engine.VDMJHandler;
+import org.pointerless.vdmj.remote.ipc.IPCIOFactory;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URISyntaxException;
-import java.net.URL;
+import java.io.*;
+import java.net.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -29,6 +26,17 @@ public class HandlerTests {
 
 	@BeforeAll()
 	public void setup(){
+		log.info("Setting up IPCIO server");
+
+		if(IPCIOFactory.available()){
+			try {
+				IPCIOFactory.getIPCIO().close();
+			} catch (Exception e) {
+				fail("Failed to close existing IPCIO");
+			}
+		}
+		IPCIOFactory.createIPCIO(new BufferedReader(Reader.nullReader()), new PrintWriter(Writer.nullWriter()));
+		log.info("IPCIO server set up");
 
 		String[] vdmjArgs = {
 				"-i", "-annotations", "-vdmsl", TestHelper.getTmpConway().toString()
@@ -55,8 +63,7 @@ public class HandlerTests {
 
 		assertLinesMatch(expectedStartup, actualStartup, "Startup did not match: "+actualStartup);
 
-		log.info("Finished starting server, continuing with tests");
-
+		log.info("Finished starting handler, continuing with tests");
 	}
 
 	@Test()
