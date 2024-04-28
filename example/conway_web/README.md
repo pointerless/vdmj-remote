@@ -1,70 +1,42 @@
-# Getting Started with Create React App
+# Conway Web UI Example
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This is a React-based website that can be used in conjunction with `vdmj-remote` to
+be hosted as a UI atop the [Conway.vdmsl](Conway.vdmsl) model. 
 
-## Available Scripts
+This UI functions by sending HTTP requests to the `/exec` endpoint of the running `vdmj-remote` 
+instance to execute the next generation of the Game of Life model. This functionality
+is defined in [src/backend-api.js](src/backend-api.js).
 
-In the project directory, you can run:
+As long as it can be compiled to a static web page, any Node.js framework can be used.
 
-### `npm start`
+## Compilation and use
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+To compile this for use with `vdmj-remote` first run
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+```commandline
+npm install
+```
 
-### `npm test`
+Then run
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```commandline
+npm run build
+```
 
-### `npm run build`
+Edit the [Conway.vdmsl](Conway.vdmsl) line 24 to reflect the path of the build
+folder e.g.:
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```
+--@WebGUI("GUI", "/home/user/vdmj-remote/example/conway_web/build")
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+> Note: this is best as an absolute path as if you change where you start `vdmj-remote`
+> it may not resolve otherwise.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Run the compiled `vdmj-remote` jar with the Conway.vdmsl script e.g.:
 
-### `npm run eject`
+```commandline
+java -jar /path/to/build/vdmj-remote-1.0-SNAPSHOT-shaded.jar -p 8080 -t vdmsl --sourcePath ./Conway.vdmsl
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)

@@ -21,7 +21,6 @@
  * Modelled in VDM-SL by Nick Battle and Peter Gorm Larsen
  */
 -- Do not commit changes to this next line, change path for your built ConwayWeb
---@WebGUI("GUI", "/home/harry/vdm-notebook-extension/vdmj-remote/example/conway_web/build")
 module Conway
 
 exports all

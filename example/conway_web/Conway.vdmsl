@@ -20,9 +20,8 @@
  * See http://en.wikipedia.org/wiki/Conway%27s_Game_of_Life.
  * Modelled in VDM-SL by Nick Battle and Peter Gorm Larsen
  */
-
-
---@WebGUI("GUI", "./build/")
+-- Do not commit changes to this next line, change path for your built ConwayWeb
+--@WebGUI("GUI", "<path to build folder>")
 module Conway
 
 exports all
@@ -30,26 +29,21 @@ exports all
 definitions
 
 values
-	TESTSTR = "aosidnoin";
 	GENERATE	= 3;		-- Number of neighbours to cause generation
 	SURVIVE		= {2, 3};	-- Numbers of neighbours to ensure survival, else death
-	
-types
-	TestType ::
-		a : seq1 of char
-		b : int;
 
+types
 	Point ::				-- Plain is indexed by integers
 		x : int
 		y : int;
-		
+
 	Population = set of Point;
-	
+
 	Configuration ::
 		gridSide : int
 		sleepTime : int
 		pop : Population;
-	
+
 functions
 	-- Generate the Points around a given Point
 	around: Point -> set of Point
@@ -57,8 +51,8 @@ functions
 		{ mk_Point(p.x + x, p.y + y) | x, y in set { -1, 0, +1 }
 			& x <> 0 or y <> 0 }
 	post card RESULT < 9;
-	
-	-- Count the number of live cells around a given point 
+
+	-- Count the number of live cells around a given point
 	neighbourCount: Population * Point -> nat
 	neighbourCount(pop, p) ==
 		card { q | q in set around(p) & q in set pop }
@@ -70,30 +64,30 @@ functions
 		dunion
 		{
 			{ q | q in set around(p)
-				  & q not in set pop and neighbourCount(pop, q) = GENERATE }		
+				  & q not in set pop and neighbourCount(pop, q) = GENERATE }
 			| p in set pop
 		}
 	post RESULT inter pop = {};		-- None currently live
-		
+
 	-- Generate the set of cells to die
 	deadCells: Population -> set of Point
 	deadCells(pop) ==
 		{ p | p in set pop
 			& neighbourCount(pop, p) not in set SURVIVE }
 	post RESULT inter pop = RESULT;	-- All currently live
-	
+
 	-- Perform one generation
 	generation: Population -> Population
 	generation(pop) ==
 		(pop \ deadCells(pop)) union newCells(pop);
 
-	-- Generate a sequence of N generations 
+	-- Generate a sequence of N generations
 	generations: nat1 * Population -> seq of Population
 	generations(n,pop) ==
 		let new_p = generation(pop)
 		in
 			if n = 1
-			then [new_p] 
+			then [new_p]
 			else [new_p] ^ generations(n-1,new_p)
 	measure n;
 
@@ -101,13 +95,13 @@ functions
 	offset: Population * int * int -> Population
 	offset(pop, dx, dy) ==
 		{ mk_Point(x + dx, y + dy) | mk_Point(x, y) in set pop };
-		
+
 	-- Test whether two Populations are within an offset of each other
 	isOffset: Population * Population * nat1 -> bool
 	isOffset(pop1, pop2, max) ==
 		exists dx, dy in set {-max, ..., max}
 			& (dx <> 0 or dy <> 0) and offset(pop1, dx, dy) = pop2;
-			
+
 	-- Test whether a game is N-periodic
 	periodN: Population * nat1 -> bool
 	periodN(pop, n) == (generation ** n)(pop) = pop;
@@ -116,7 +110,7 @@ functions
 	disappearN: Population * nat1 -> bool
 	disappearN(pop, n) ==
 		(generation ** n)(pop) = {};
- 
+
 	-- Test whether a game is N-gliding within max cells
 	gliderN: Population * nat1 * nat1 -> bool
 	gliderN(pop, n, max) ==
@@ -134,12 +128,10 @@ functions
 	gliderNP: Population * nat1 * nat1 -> bool
 	gliderNP(pop, n, max) ==
 		{ a | a in set {1, ..., n} & gliderN(pop, a, max) } = {n};
- 
+
 
 -- Test games from http://en.wikipedia.org/wiki/Conway%27s_Game_of_Life
 values
-	TESTINST = mk_TestType("aosnbdf", 2);
-
 	BLOCK = mk_Configuration(6, 500, { mk_Point(0,0), mk_Point(-1,0), mk_Point(0,-1), mk_Point(-1,-1) });
 
 	BLINKER = mk_Configuration(6, 500,{ mk_Point(-1,0), mk_Point(0,0), mk_Point(1,0) });

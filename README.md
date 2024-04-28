@@ -38,5 +38,5 @@ java -jar vdmj-remote-1.0-SNAPSHOT-shaded.jar -p 8080 -t vdmsl --sourcePath Conw
 ```
 
 To embed a webpage atop a script, use the `@WebGUI(<nick>, <path>)` annotation, as demonstrated in
-[src/test/resources/Conway.vdmsl](src/test/resources/Conway.vdmsl) replacing the path with the absolute
+[example/conway_web/Conway.vdmsl](example/conway_web/Conway.vdmsl) replacing the path with the absolute
 path to your static web content folder (e.g. `build` for Node or `www` for legacy web development).
