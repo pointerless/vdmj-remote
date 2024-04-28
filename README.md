@@ -12,7 +12,7 @@ mvn clean install
 
 Use the JAR named:
 
-`vdmj-extended-<version>-shaded.jar`
+`vdmj-remote-<version>-shaded.jar`
 
 The CLI args are as follows:
 
