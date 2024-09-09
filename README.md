@@ -2,6 +2,9 @@
 
 ## An RPC system/REST API for [VDMJ](https://github.com/nickbattle/vdmj)
 
+> Note, this is a web service and allows access via web browser. It is set up to only allow access from your machine (bound to localhost), 
+> this can be changed by changing the hostname in [GlobalProperties.java](src/main/java/org/pointerless/vdmj/remote/GlobalProperties.java)
+
 > This is currently WIP, commits may include errors
 
 To compile run:
